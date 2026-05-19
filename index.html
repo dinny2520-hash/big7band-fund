@@ -717,9 +717,23 @@ function doLogin(){
     const mid=document.getElementById('login-member-name').value;
     const p=document.getElementById('login-member-pass').value;
     if(!mid){document.getElementById('login-err').textContent='กรุณาเลือกชื่อสมาชิก';return;}
-    if(p!==DB.passwords.member){document.getElementById('login-err').textContent='รหัสผ่านไม่ถูกต้อง';return;}
-    const m=MEMBERS.find(x=>x.id===mid);
-    SESSION={role:'member',name:m.name,memberId:mid};startApp();
+    // ถ้า Sheet ยังโหลดไม่เสร็จ ให้รอแล้วลองใหม่
+    if(p===DB.passwords.member){
+      const m=MEMBERS.find(x=>x.id===mid);
+      SESSION={role:'member',name:m.name,memberId:mid};startApp();return;
+    }
+    // Sheet อาจยังโหลดไม่เสร็จ — ลองโหลดรหัสใหม่แล้วตรวจ
+    const errEl=document.getElementById('login-err');
+    errEl.textContent='กำลังตรวจสอบ...';
+    apiCall({action:'getAll'}).then(d=>{
+      if(d.passwords) DB.passwords=d.passwords;
+      if(p===DB.passwords.member){
+        const m=MEMBERS.find(x=>x.id===mid);
+        SESSION={role:'member',name:m.name,memberId:mid};startApp();
+      } else {
+        errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+      }
+    }).catch(()=>{ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; });
   }
 }
 function doLogout(){
@@ -1229,8 +1243,11 @@ function initDates(){
 }
 
 // ===== START =====
+// populate selects และ login dropdown ทันทีก่อนโหลด Sheet
+populateSelects();
+initDates();
+// โหลดข้อมูลจาก Sheet (รหัสผ่าน + ข้อมูลกองทุน) แบบ async
 loadDB().then(()=>{
-  populateSelects();
   startAutoRefresh();
 });
 </script>
