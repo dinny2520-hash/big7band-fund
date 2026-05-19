@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กองทุนวง Big Seven Band</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e29;--bg4:#20263a;
+  --accent:#f0a500;--accent2:#e07b00;
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.12);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.12);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.12);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.12);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.12);
+  --text:#f0eeea;--text2:#9ca3af;--text3:#6b7280;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --radius:12px;--radius-sm:8px;--shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-200px;left:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(240,165,0,0.05) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:40px 36px;width:360px;text-align:center;box-shadow:var(--shadow)}
+.login-logo{width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:22px;color:#000;margin:0 auto 16px;box-shadow:0 4px 20px rgba(240,165,0,0.35)}
+.login-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:600;margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.login-tabs{display:flex;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;margin-bottom:20px;gap:4px}
+.login-tab{flex:1;padding:7px;border:none;background:transparent;color:var(--text2);font-family:'Sarabun',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:6px;transition:all .2s}
+.login-tab.active{background:var(--bg4);color:var(--accent)}
+.login-input{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;outline:none;margin-bottom:12px;transition:border-color .2s}
+.login-input:focus{border-color:rgba(240,165,0,.5)}
+.login-btn{width:100%;padding:11px;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:4px}
+.login-btn:hover{background:var(--accent2)}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;min-height:18px}
+.member-select{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Sarabun',sans-serif;font-size:15px;outline:none;margin-bottom:12px}
+.member-select option{background:var(--bg2)}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.brand{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.brand-logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:18px;color:#000;margin-bottom:10px;box-shadow:0 4px 16px rgba(240,165,0,.3)}
+.brand-name{font-family:'Kanit',sans-serif;font-weight:600;font-size:15px}
+.brand-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.user-badge{margin:10px 12px 0;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:8px}
+.user-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:var(--text3)}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px;transition:color .2s}
+.logout-btn:hover{color:var(--red)}
+.nav{padding:10px 12px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text2);font-size:14px;font-weight:400;transition:all .2s;margin-bottom:2px;border:1px solid transparent;user-select:none;position:relative}
+.nav-item svg{flex-shrink:0;opacity:.7}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--accent);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.2);font-weight:500}
+.nav-item.active svg{opacity:1}
+.nav-item.hidden{display:none}
+.nav-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.sidebar-balance{margin:10px 12px 12px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.sb-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.sb-val{font-family:'Kanit',sans-serif;font-size:19px;font-weight:600;color:var(--green)}
+.sb-val.neg{color:var(--red)}
+.main{margin-left:240px;flex:1;padding:28px 32px;min-height:100vh}
+.page{display:none;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-header{margin-bottom:22px}
+.page-title{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.page-sub{font-size:13px;color:var(--text3)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-icon{font-size:20px;margin-bottom:8px}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:3px}
+.stat-val{font-family:'Kanit',sans-serif;font-size:19px;font-weight:600}
+.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.amber{color:var(--amber)}.stat-val.blue{color:var(--blue)}.stat-val.purple{color:var(--purple)}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* APPROVAL CARD */
+.approval-card{background:var(--bg2);border:1px solid rgba(240,165,0,.25);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;transition:border-color .2s}
+.approval-card:hover{border-color:rgba(240,165,0,.5)}
+.ac-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ac-left{flex:1}
+.ac-member{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ac-amount{font-family:'Kanit',sans-serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:8px}
+.ac-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.ac-meta-item{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.ac-meta-item span{color:var(--text2)}
+.ac-note{font-size:13px;color:var(--text2);padding:8px 12px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:12px}
+.ac-actions{display:flex;gap:8px;align-items:center}
+.btn-approve-big{padding:9px 20px;background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:var(--radius-sm);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-approve-big:hover{background:rgba(34,197,94,.25)}
+.btn-reject-big{padding:9px 20px;background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-reject-big:hover{background:rgba(239,68,68,.25)}
+.btn-share-sm{padding:7px 14px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-share-sm:hover{background:var(--bg3);color:var(--text)}
+.empty-approval{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-approval .icon{font-size:40px;margin-bottom:12px}
+.empty-approval p{font-size:14px}
+
+/* FORM */
+.form-grid{display:grid;gap:12px}
+.form-2{grid-template-columns:1fr 1fr}.form-3{grid-template-columns:1fr 1fr 1fr}.form-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:rgba(240,165,0,.5);background:var(--bg4)}
+.field select option{background:var(--bg2)}
+.field-note{font-size:11px;color:var(--text3);margin-top:4px}
+.field-note.warn{color:var(--amber)}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent)}.btn-primary:hover{background:var(--accent2)}.btn-primary:active{transform:scale(.98)}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2)}.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:4px 7px;border-radius:6px;transition:all .15s}.btn-del:hover{color:var(--red);background:var(--red-bg)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.form-actions{display:flex;justify-content:flex-end;margin-top:14px;gap:8px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:7px 10px;text-align:left;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+tbody td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.015)}
+.empty-row td{text-align:center;padding:28px;color:var(--text3);font-size:13px}
+
+/* BADGE */
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.badge-income{background:var(--green-bg);color:var(--green)}.badge-expense{background:var(--red-bg);color:var(--red)}
+.badge-payout{background:var(--blue-bg);color:var(--blue)}.badge-loan{background:var(--amber-bg);color:var(--amber)}
+.badge-pending{background:var(--amber-bg);color:var(--amber)}.badge-approved{background:var(--green-bg);color:var(--green)}.badge-rejected{background:var(--red-bg);color:var(--red)}
+.badge-once{background:rgba(167,139,250,.15);color:var(--purple)}.badge-tip-all{background:var(--blue-bg);color:var(--blue)}
+.badge-tip-part{background:rgba(251,191,36,.15);color:var(--amber)}.badge-daily{background:var(--green-bg);color:var(--green)}.badge-fee{background:rgba(240,165,0,.15);color:var(--accent)}
+
+/* MEMBER CARDS */
+.member-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:border-color .2s,transform .2s;text-align:center}
+.member-card:hover{border-color:rgba(240,165,0,.25);transform:translateY(-2px)}
+.m-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),var(--bg3));border:2px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:600;font-size:15px;color:var(--accent);margin:0 auto 10px}
+.m-name{font-weight:500;font-size:14px;margin-bottom:10px}
+.m-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:5px;padding:0 4px}
+.m-stat span:last-child{color:var(--text);font-weight:500}
+.m-stat span.neg{color:var(--red)}
+.m-divider{border-top:1px solid var(--border);margin:8px 0}
+
+/* RECENT */
+.recent-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.recent-item:last-child{border-bottom:none}
+.ri-left{display:flex;align-items:center;gap:10px}
+.ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ri-label{font-size:13px}
+.ri-date{font-size:11px;color:var(--text3);margin-top:1px}
+.ri-amount{font-family:'Kanit',sans-serif;font-size:14px;font-weight:500}
+
+/* LOAN TABS */
+.loan-type-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.lt-tab{padding:7px 14px;border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:13px;color:var(--text2);background:transparent;font-family:'Sarabun',sans-serif;transition:all .2s}
+.lt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.1)}
+.loan-panel{display:none}.loan-panel.active{display:block}
+
+/* APPROVE MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:32px;width:420px;max-width:95vw;box-shadow:var(--shadow);position:relative}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer}
+.modal-close:hover{color:var(--text)}
+.modal-title{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text3);margin-bottom:20px}
+.modal-info{background:var(--bg3);border-radius:var(--radius-sm);padding:14px;margin-bottom:18px;border:1px solid var(--border)}
+.modal-info-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.modal-info-row:last-child{margin-bottom:0}
+.modal-info-row .k{color:var(--text3)}
+.modal-info-row .v{color:var(--text);font-weight:500}
+.modal-info-row .v.big{font-family:'Kanit',sans-serif;font-size:18px;color:var(--accent)}
+.pin-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:500}
+.pin-input{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Sarabun',sans-serif;font-size:16px;outline:none;text-align:center;letter-spacing:4px;margin-bottom:8px;transition:border-color .2s}
+.pin-input:focus{border-color:rgba(240,165,0,.5)}
+.pin-err{font-size:12px;color:var(--red);text-align:center;min-height:16px;margin-bottom:10px}
+.pin-who{font-size:12px;color:var(--text3);text-align:center;margin-bottom:14px}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1}
+.btn-modal-approve{padding:11px;background:var(--green);color:#000;border:none;border-radius:var(--radius-sm);font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-modal-approve:hover{background:#16a34a}
+.btn-modal-reject{padding:11px;background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-modal-reject:hover{background:rgba(239,68,68,.2)}
+
+/* SHARE MODAL */
+#share-modal .modal-box{width:480px}
+#share-canvas-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+#share-canvas{border-radius:12px;max-width:100%}
+.share-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid rgba(240,165,0,.35);border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;color:var(--text);transform:translateY(80px);opacity:0;transition:all .25s;z-index:9999;box-shadow:var(--shadow)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* SETTINGS */
+.pwd-row{display:flex;gap:10px;align-items:flex-end;margin-top:10px}
+.pwd-row .field{flex:1}
+.setting-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500;margin-top:16px}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+@media(max-width:700px){.sidebar{width:100%;position:relative;min-height:auto}.main{margin-left:0;padding:16px}.stats,.member-grid{grid-template-columns:1fr 1fr}.form-2,.form-3,.form-4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">B7</div>
+    <div class="login-title">Big Seven Band</div>
+    <div class="login-sub">ระบบกองทุนวง — กรุณาเข้าสู่ระบบ</div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginMode('admin')">ผู้ดูแล</button>
+      <button class="login-tab" onclick="setLoginMode('member')">สมาชิก</button>
+    </div>
+    <div id="login-admin-fields">
+      <input class="login-input" type="text" id="login-user" placeholder="ชื่อผู้ใช้ (ชิษณุพงศ์ / กฤษติญา)">
+      <input class="login-input" type="password" id="login-pass" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-member-fields" style="display:none">
+      <select class="member-select" id="login-member-name"><option value="">เลือกชื่อสมาชิก</option></select>
+      <input class="login-input" type="password" id="login-member-pass" placeholder="รหัสผ่านสมาชิก" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="layout" id="app" style="display:none">
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">B7</div>
+      <div class="brand-name">Big Seven Band</div>
+      <div class="brand-sub">ระบบกองทุนวง</div>
+    </div>
+    <div class="user-badge">
+      <div class="user-dot"></div>
+      <div class="user-info">
+        <div class="user-name" id="sb-username">-</div>
+        <div class="user-role" id="sb-role">-</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="ออกจากระบบ">⏏</button>
+    </div>
+    <div class="nav">
+      <div class="nav-item active" onclick="go('dashboard')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        ภาพรวม
+      </div>
+      <div class="nav-item hidden" id="nav-approval" onclick="go('approval')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        พิจารณากู้เงิน
+        <span class="nav-badge" id="approval-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="go('transactions')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+        รายรับ-รายจ่าย
+      </div>
+      <div class="nav-item" onclick="go('payouts')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a5 5 0 0 0-10 0v2"/><rect x="1" y="9" width="22" height="13" rx="2"/><circle cx="12" cy="15" r="2"/></svg>
+        จ่ายสมาชิก
+      </div>
+      <div class="nav-item" onclick="go('loans')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        การกู้เงิน
+      </div>
+      <div class="nav-item" onclick="go('members')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        สมาชิก
+      </div>
+      <div class="nav-item hidden" id="nav-settings" onclick="go('settings')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        ตั้งค่าระบบ
+      </div>
+    </div>
+    <div class="sidebar-balance">
+      <div class="sb-label">ยอดเงินกองทุน</div>
+      <div class="sb-val" id="sb-balance">฿0</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header"><div class="page-title">ภาพรวมกองทุน</div><div class="page-sub">สรุปสถานะทางการเงินของวง Big Seven Band</div></div>
+      <div class="stats" id="stat-cards"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><div class="card-title"><span class="card-dot"></span>รายการล่าสุด</div><div id="recent-items"></div></div>
+        <div class="card"><div class="card-title"><span class="card-dot"></span>สรุปรายสมาชิก</div><div id="member-summary"></div></div>
+      </div>
+    </div>
+
+    <!-- APPROVAL PAGE -->
+    <div id="page-approval" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <svg width="22" height="22" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          พิจารณาคำร้องกู้เงิน
+        </div>
+        <div class="page-sub">คำร้องที่รอการพิจารณา — กดอนุมัติหรือไม่อนุมัติแล้วใส่รหัสผ่านเพื่อยืนยัน</div>
+      </div>
+      <div id="approval-list"></div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div id="page-transactions" class="page">
+      <div class="page-header"><div class="page-title">รายรับ-รายจ่าย</div><div class="page-sub">บันทึกรายรับและรายจ่ายของวง</div></div>
+      <div id="tx-form-wrap" class="card">
+        <div class="card-title"><span class="card-dot"></span>เพิ่มรายการ</div>
+        <div class="form-grid form-4">
+          <div class="field"><label>วันที่</label><input type="date" id="tx-date"></div>
+          <div class="field"><label>ประเภท</label><select id="tx-type"><option value="income">รายรับ</option><option value="expense">รายจ่าย</option></select></div>
+          <div class="field"><label>หมวดหมู่</label><input type="text" id="tx-cat" placeholder="เช่น ค่าจ้างแสดง"></div>
+          <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="tx-amount" min="0" placeholder="0"></div>
+        </div>
+        <div class="form-grid form-2" style="margin-top:10px">
+          <div class="field"><label>หมายเหตุ</label><input type="text" id="tx-note" placeholder="รายละเอียดเพิ่มเติม"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="addTransaction()">+ บันทึกรายการ</button></div>
+      </div>
+      <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติรายรับ-รายจ่าย</div>
+        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน (บาท)</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PAYOUTS -->
+    <div id="page-payouts" class="page">
+      <div class="page-header"><div class="page-title">จ่ายเงินสมาชิก</div><div class="page-sub">บันทึกการจ่ายเงินให้กับสมาชิกแต่ละคน</div></div>
+      <div id="po-form-wrap" class="card">
+        <div class="card-title"><span class="card-dot"></span>บันทึกการจ่ายเงิน</div>
+        <div class="form-grid form-3">
+          <div class="field"><label>วันที่</label><input type="date" id="po-date"></div>
+          <div class="field"><label>สมาชิก</label><select id="po-member"></select></div>
+          <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="po-amount" min="0" placeholder="0"></div>
+        </div>
+        <div class="form-grid form-2" style="margin-top:10px">
+          <div class="field"><label>รายละเอียด</label><input type="text" id="po-note" placeholder="เช่น เงินเดือน, โบนัส, ค่าแสดง"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="addPayout()">+ บันทึก</button></div>
+      </div>
+      <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการจ่ายเงิน</div>
+        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>รายละเอียด</th><th style="text-align:right">จำนวน (บาท)</th><th></th></tr></thead><tbody id="po-list"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- LOANS -->
+    <div id="page-loans" class="page">
+      <div class="page-header"><div class="page-title">การกู้เงิน</div><div class="page-sub">ยื่นคำร้องขอกู้ และดูประวัติ</div></div>
+      <div class="card">
+        <div class="card-title"><span class="card-dot"></span>ยื่นเรื่องกู้เงิน</div>
+        <div class="loan-type-tabs">
+          <button class="lt-tab active" onclick="setLoanType('once')">💊 คืนครั้งเดียว</button>
+          <button class="lt-tab" onclick="setLoanType('tip-all')">💰 หักทิปทั้งหมด</button>
+          <button class="lt-tab" onclick="setLoanType('tip-part')">✂️ หักทิปบางส่วน</button>
+          <button class="lt-tab" onclick="setLoanType('daily')">📅 หักรายวัน</button>
+          <button class="lt-tab" onclick="setLoanType('fee')">🎤 หักค่าตัว</button>
+        </div>
+
+        <div class="loan-panel active" id="panel-once">
+          <div style="font-size:12px;color:var(--amber);margin-bottom:12px;padding:8px 12px;background:var(--amber-bg);border-radius:var(--radius-sm)">⚠ กู้ได้ไม่เกิน 1,500 บาท/ครั้ง · ต้องคืนภายใน 15 วันนับจากวันกู้</div>
+          <div class="form-grid form-3">
+            <div class="field"><label>วันที่กู้</label><input type="date" id="ln-once-date" oninput="checkReturnDate()"></div>
+            <div class="field"><label>สมาชิก</label><select id="ln-once-member"></select></div>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500 บาท)</label>
+              <input type="number" id="ln-once-amount" min="0" max="1500" placeholder="0" oninput="checkMax(this,1500,'ln-once-warn')">
+              <div class="field-note warn" id="ln-once-warn" style="display:none">⚠ เกินวงเงิน กรอกได้ไม่เกิน 1,500 บาท</div>
+            </div>
+          </div>
+          <div class="form-grid form-2" style="margin-top:10px">
+            <div class="field"><label>วันที่จะคืน (ไม่เกิน 15 วันจากวันกู้)</label>
+              <input type="date" id="ln-once-return" oninput="checkReturnDate()">
+              <div class="field-note warn" id="ln-once-return-warn" style="display:none">⚠ วันคืนเกิน 15 วันนับจากวันกู้</div>
+            </div>
+            <div class="field"><label>เหตุผล</label><input type="text" id="ln-once-reason" placeholder="ระบุเหตุผล"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('once')">+ ยื่นคำร้อง</button></div>
+        </div>
+
+        <div class="loan-panel" id="panel-tip-all">
+          <div style="font-size:12px;color:var(--blue);margin-bottom:12px;padding:8px 12px;background:var(--blue-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,200 บาท/ครั้ง · คืนโดยการหักทิปทั้งหมด ผู้ดูแลจะเริ่มหักให้</div>
+          <div class="form-grid form-3">
+            <div class="field"><label>วันที่กู้</label><input type="date" id="ln-tipall-date"></div>
+            <div class="field"><label>สมาชิก</label><select id="ln-tipall-member"></select></div>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,200 บาท)</label>
+              <input type="number" id="ln-tipall-amount" min="0" max="1200" placeholder="0" oninput="checkMax(this,1200,'ln-tipall-warn')">
+              <div class="field-note warn" id="ln-tipall-warn" style="display:none">⚠ เกินวงเงิน กรอกได้ไม่เกิน 1,200 บาท</div>
+            </div>
+          </div>
+          <div class="form-grid form-2" style="margin-top:10px">
+            <div class="field"><label>เหตุผล</label><input type="text" id="ln-tipall-reason" placeholder="ระบุเหตุผล"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('tip-all')">+ ยื่นคำร้อง</button></div>
+        </div>
+
+        <div class="loan-panel" id="panel-tip-part">
+          <div style="font-size:12px;color:var(--amber);margin-bottom:12px;padding:8px 12px;background:var(--amber-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,000 บาท/ครั้ง · คืนโดยการหักทิปบางส่วน ผู้ดูแลจะเริ่มหักให้</div>
+          <div class="form-grid form-3">
+            <div class="field"><label>วันที่กู้</label><input type="date" id="ln-tippart-date"></div>
+            <div class="field"><label>สมาชิก</label><select id="ln-tippart-member"></select></div>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,000 บาท)</label>
+              <input type="number" id="ln-tippart-amount" min="0" max="1000" placeholder="0" oninput="checkMax(this,1000,'ln-tippart-warn')">
+              <div class="field-note warn" id="ln-tippart-warn" style="display:none">⚠ เกินวงเงิน กรอกได้ไม่เกิน 1,000 บาท</div>
+            </div>
+          </div>
+          <div class="form-grid form-2" style="margin-top:10px">
+            <div class="field"><label>เหตุผล</label><input type="text" id="ln-tippart-reason" placeholder="ระบุเหตุผล"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('tip-part')">+ ยื่นคำร้อง</button></div>
+        </div>
+
+        <div class="loan-panel" id="panel-daily">
+          <div style="font-size:12px;color:var(--green);margin-bottom:12px;padding:8px 12px;background:var(--green-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,500 บาท/ครั้ง · หักรายวันตามจำนวนที่เลือก</div>
+          <div class="form-grid form-3">
+            <div class="field"><label>วันที่กู้</label><input type="date" id="ln-daily-date"></div>
+            <div class="field"><label>สมาชิก</label><select id="ln-daily-member"></select></div>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500 บาท)</label>
+              <input type="number" id="ln-daily-amount" min="0" max="1500" placeholder="0" oninput="checkMax(this,1500,'ln-daily-warn')">
+              <div class="field-note warn" id="ln-daily-warn" style="display:none">⚠ เกินวงเงิน กรอกได้ไม่เกิน 1,500 บาท</div>
+            </div>
+          </div>
+          <div class="form-grid form-3" style="margin-top:10px">
+            <div class="field"><label>หักวันละ (บาท)</label>
+              <select id="ln-daily-rate"><option value="100">100</option><option value="200">200</option><option value="300">300</option><option value="400">400</option><option value="500">500</option></select>
+            </div>
+            <div class="field"><label>วันที่เริ่มคืน</label><input type="date" id="ln-daily-start"></div>
+            <div class="field"><label>เหตุผล</label><input type="text" id="ln-daily-reason" placeholder="ระบุเหตุผล"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('daily')">+ ยื่นคำร้อง</button></div>
+        </div>
+
+        <div class="loan-panel" id="panel-fee">
+          <div style="font-size:12px;color:var(--accent);margin-bottom:12px;padding:8px 12px;background:rgba(240,165,0,.1);border-radius:var(--radius-sm)">ℹ เบิกตามค่าตัวจริง · ร้านจะโอนค่าตัวเข้าบัญชีกองทุนก่อน แล้วค่อยเบิกออก</div>
+          <div class="form-grid form-3">
+            <div class="field"><label>วันที่กู้</label><input type="date" id="ln-fee-date"></div>
+            <div class="field"><label>สมาชิก</label><select id="ln-fee-member"></select></div>
+            <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="ln-fee-amount" min="0" placeholder="0"></div>
+          </div>
+          <div class="form-grid form-2" style="margin-top:10px">
+            <div class="field"><label>รายละเอียด (ชื่อร้าน/งาน)</label><input type="text" id="ln-fee-reason" placeholder="ชื่อร้าน/งาน วันที่แสดง"></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('fee')">+ ยื่นคำร้อง</button></div>
+        </div>
+      </div>
+
+      <div class="card" id="repay-form-wrap">
+        <div class="card-title"><span class="card-dot"></span>บันทึกการคืนเงิน <span style="font-size:12px;color:var(--text3);font-weight:400;margin-left:4px">(เฉพาะผู้ดูแล)</span></div>
+        <div class="form-grid form-4">
+          <div class="field"><label>วันที่คืน</label><input type="date" id="lr-date"></div>
+          <div class="field"><label>สมาชิก</label><select id="lr-member"></select></div>
+          <div class="field"><label>จำนวนที่คืน (บาท)</label><input type="number" id="lr-amount" min="0" placeholder="0"></div>
+          <div class="field"><label>หมายเหตุ</label><input type="text" id="lr-note" placeholder="งวดที่, เดือน..."></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="addRepay()">+ บันทึกคืนเงิน</button></div>
+      </div>
+
+      <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการกู้ทั้งหมด</div>
+        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>ประเภท</th><th>เหตุผล</th><th>สถานะ</th><th>ผู้อนุมัติ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="ln-list"></tbody></table></div>
+      </div>
+      <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการคืนเงิน</div>
+        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="lr-list"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- MEMBERS -->
+    <div id="page-members" class="page">
+      <div class="page-header"><div class="page-title">สมาชิกวง</div><div class="page-sub">สรุปข้อมูลทางการเงินของสมาชิกแต่ละคน</div></div>
+      <div class="member-grid" id="member-grid"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="page">
+      <div class="page-header"><div class="page-title">ตั้งค่าระบบ</div><div class="page-sub">จัดการรหัสผ่าน — เฉพาะ ชิษณุพงศ์ เท่านั้น</div></div>
+      <div class="card">
+        <div class="card-title"><span class="card-dot"></span>รหัสผ่านผู้ดูแล</div>
+        <div class="setting-label">ชิษณุพงศ์ สาริกา (Super Admin)</div>
+        <div class="pwd-row">
+          <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pwd-admin1" placeholder="ตั้งรหัสใหม่"></div>
+          <div class="field"><label>ยืนยันรหัส</label><input type="password" id="pwd-admin1-c" placeholder="พิมพ์อีกครั้ง"></div>
+          <button class="btn btn-primary" onclick="changePwd('admin1')">บันทึก</button>
+        </div>
+        <div class="setting-label" style="margin-top:20px">กฤษติญา เทพธานี (Admin)</div>
+        <div class="pwd-row">
+          <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pwd-admin2" placeholder="ตั้งรหัสใหม่"></div>
+          <div class="field"><label>ยืนยันรหัส</label><input type="password" id="pwd-admin2-c" placeholder="พิมพ์อีกครั้ง"></div>
+          <button class="btn btn-primary" onclick="changePwd('admin2')">บันทึก</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-dot"></span>รหัสผ่านสมาชิก</div>
+        <div class="setting-label">สมาชิกทุกคนใช้รหัสผ่านเดียวกัน</div>
+        <div class="pwd-row">
+          <div class="field"><label>รหัสผ่านสมาชิก</label><input type="password" id="pwd-member" placeholder="ตั้งรหัสใหม่"></div>
+          <div class="field"><label>ยืนยันรหัส</label><input type="password" id="pwd-member-c" placeholder="พิมพ์อีกครั้ง"></div>
+          <button class="btn btn-primary" onclick="changePwd('member')">บันทึก</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeApproveModal()">✕</button>
+    <div class="modal-title" id="approve-modal-title">ยืนยันการอนุมัติ</div>
+    <div class="modal-sub" id="approve-modal-sub">ใส่รหัสผ่านของผู้ดูแลเพื่อยืนยัน</div>
+    <div class="modal-info" id="approve-modal-info"></div>
+    <div class="pin-label">รหัสผ่านผู้ดูแล (ชิษณุพงศ์ หรือ กฤษติญา)</div>
+    <input class="pin-input" type="password" id="approve-pin" placeholder="••••••" onkeydown="if(event.key==='Enter')confirmApprove()">
+    <div class="pin-err" id="approve-pin-err"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-reject" id="approve-reject-btn" onclick="confirmApprove('reject')">✕ ไม่อนุมัติ</button>
+      <button class="btn-modal-approve" onclick="confirmApprove('approve')">✓ อนุมัติ</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal-box" style="width:480px">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <div class="modal-title">แชร์ยอดกู้</div>
+    <div class="modal-sub">บันทึกภาพหรือคัดลอกข้อความ แล้วแชร์ไปไลน์</div>
+    <div id="share-canvas-wrap">
+      <canvas id="share-canvas" width="420" height="310" style="border-radius:10px;max-width:100%"></canvas>
+      <div class="share-btns">
+        <button class="btn btn-primary" id="btn-native-share" onclick="nativeShare()" style="background:var(--green);border-color:var(--green);color:#000;display:none">📤 แชร์ไปไลน์</button>
+        <button class="btn btn-primary" onclick="downloadImg()">🖼 เปิดภาพ (แล้วบันทึก)</button>
+        <button class="btn btn-ghost" onclick="copyText()">📋 คัดลอกข้อความ</button>
+      </div>
+      <div id="share-hint" style="font-size:11px;color:var(--text3);text-align:center">กด "เปิดภาพ" → คลิกขวาที่รูป → บันทึกรูปภาพ → ส่งไลน์</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const API='https://script.google.com/macros/s/AKfycbwM0lq8wDipcD_3CNYbzo2IRjGJ6TPmuim5xqakuMQutJIVI05c2aiJ-jdzDExDDNPP/exec';
+let DB={transactions:[],payouts:[],loans:[],repayments:[],passwords:{admin1:'1234',admin2:'5678',member:'0000'}};
+let _syncing=false;
+
+async function apiCall(body){
+  const res=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+  return res.json();
+}
+
+function showSyncing(msg='กำลังซิงค์...'){
+  let el=document.getElementById('sync-indicator');
+  if(!el){el=document.createElement('div');el.id='sync-indicator';
+    el.style.cssText='position:fixed;top:12px;right:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--text2);z-index:9998;transition:opacity .3s';
+    document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+}
+function hideSyncing(){
+  const el=document.getElementById('sync-indicator');
+  if(el){el.textContent='✓ ซิงค์แล้ว';setTimeout(()=>{el.style.opacity='0';},1200);}
+}
+
+async function loadDB(){
+  showSyncing('กำลังโหลดข้อมูล...');
+  try{
+    const d=await apiCall({action:'getAll'});
+    if(d.error) throw new Error(d.error);
+    // normalize rows from sheet (values may be numbers/strings)
+    ['transactions','payouts','loans','repayments'].forEach(k=>{
+      DB[k]=(d[k]||[]).map(r=>{
+        const o={};
+        Object.entries(r).forEach(([key,val])=>o[key]=val===''?'':val);
+        if(o.amount) o.amount=+o.amount;
+        if(o.dailyRate) o.dailyRate=+o.dailyRate;
+        return o;
+      });
+    });
+    if(d.passwords) DB.passwords=d.passwords;
+    hideSyncing();
+  }catch(e){
+    showSyncing('⚠ โหลดไม่ได้ — ใช้ข้อมูลชั่วคราว');
+    console.error(e);
+  }
+}
+
+async function saveRow(sheet,row){
+  showSyncing();
+  try{
+    const r=await apiCall({action:'addRow',sheet,row});
+    if(r.error) throw new Error(r.error);
+    hideSyncing();
+  }catch(e){showSyncing('⚠ บันทึกไม่ได้');console.error(e);}
+}
+
+async function updateSheetRow(sheet,id,data){
+  showSyncing();
+  try{
+    const r=await apiCall({action:'updateRow',sheet,id,data});
+    if(r.error) throw new Error(r.error);
+    hideSyncing();
+  }catch(e){showSyncing('⚠ อัปเดตไม่ได้');console.error(e);}
+}
+
+async function deleteSheetRow(sheet,id){
+  showSyncing();
+  try{
+    const r=await apiCall({action:'deleteRow',sheet,id});
+    if(r.error) throw new Error(r.error);
+    hideSyncing();
+  }catch(e){showSyncing('⚠ ลบไม่ได้');console.error(e);}
+}
+
+async function savePasswordToSheet(key,value){
+  showSyncing();
+  try{
+    await apiCall({action:'setPassword',key,value});
+    hideSyncing();
+  }catch(e){showSyncing('⚠ บันทึกรหัสไม่ได้');console.error(e);}
+}
+
+// auto-refresh ทุก 15 วิ
+function startAutoRefresh(){
+  setInterval(async()=>{
+    if(_syncing) return;
+    _syncing=true;
+    try{
+      const d=await apiCall({action:'getAll'});
+      if(!d.error){
+        ['transactions','payouts','loans','repayments'].forEach(k=>{
+          DB[k]=(d[k]||[]).map(r=>{
+            const o={};
+            Object.entries(r).forEach(([key,val])=>o[key]=val===''?'':val);
+            if(o.amount) o.amount=+o.amount;
+            if(o.dailyRate) o.dailyRate=+o.dailyRate;
+            return o;
+          });
+        });
+        if(d.passwords) DB.passwords=d.passwords;
+        // re-render หน้าที่เปิดอยู่
+        const activePage=document.querySelector('.page.active');
+        if(activePage){
+          const name=activePage.id.replace('page-','');
+          renders[name]&&renders[name]();
+        }
+        updateSidebar();
+      }
+    }catch(e){}
+    _syncing=false;
+  },15000);
+}
+
+const MEMBERS=[
+  {id:'m1',name:'ชิษณุพงศ์ สาริกา',initials:'ชส'},
+  {id:'m2',name:'กฤษติญา เทพธานี',initials:'กท'},
+  {id:'m3',name:'วุฒิสันต์ จันทร์แฝง',initials:'วจ'},
+  {id:'m4',name:'ปกรณ์ โชติช่วง',initials:'ปช'},
+  {id:'m5',name:'ชัยณรงค์ เรียบร้อย',initials:'ชร'},
+  {id:'m6',name:'ภูเบศ ขิงชัย',initials:'ภข'},
+];
+
+const TYPE_LABEL={once:'คืนครั้งเดียว','tip-all':'หักทิปทั้งหมด','tip-part':'หักทิปบางส่วน',daily:'หักรายวัน',fee:'หักค่าตัว'};
+const TYPE_BADGE={once:'badge-once','tip-all':'badge-tip-all','tip-part':'badge-tip-part',daily:'badge-daily',fee:'badge-fee'};
+const TYPE_LIMIT={once:1500,'tip-all':1200,'tip-part':1000,daily:1500,fee:Infinity};
+
+let SESSION={role:'',name:'',memberId:''};
+
+// ===== HELPERS =====
+function mName(id){const m=MEMBERS.find(x=>x.id===id);return m?m.name:'-';}
+function mInit(id){const m=MEMBERS.find(x=>x.id===id);return m?m.initials:'??';}
+function fmt(n){return Number(n).toLocaleString('th-TH');}
+function fmtDate(d){if(!d)return'-';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});}
+function today(){return new Date().toISOString().split('T')[0];}
+function isAdmin(){return SESSION.role==='superadmin'||SESSION.role==='admin';}
+function isSuperAdmin(){return SESSION.role==='superadmin';}
+
+function toast(msg,dur=2400){
+  const el=document.getElementById('toast');
+  el.textContent='✓ '+msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ===== LOGIN =====
+let loginMode='admin';
+function setLoginMode(m){
+  loginMode=m;
+  document.getElementById('login-admin-fields').style.display=m==='admin'?'block':'none';
+  document.getElementById('login-member-fields').style.display=m==='member'?'block':'none';
+  document.querySelectorAll('.login-tab').forEach((t,i)=>t.classList.toggle('active',(m==='admin'&&i===0)||(m==='member'&&i===1)));
+  document.getElementById('login-err').textContent='';
+}
+function doLogin(){
+  document.getElementById('login-err').textContent='';
+  if(loginMode==='admin'){
+    const u=document.getElementById('login-user').value.trim();
+    const p=document.getElementById('login-pass').value;
+    if((u==='ชิษณุพงศ์'||u==='chitsanupong')&&p===DB.passwords.admin1){
+      SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};startApp();return;
+    }
+    if((u==='กฤษติญา'||u==='krittiya')&&p===DB.passwords.admin2){
+      SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};startApp();return;
+    }
+    document.getElementById('login-err').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+  } else {
+    const mid=document.getElementById('login-member-name').value;
+    const p=document.getElementById('login-member-pass').value;
+    if(!mid){document.getElementById('login-err').textContent='กรุณาเลือกชื่อสมาชิก';return;}
+    if(p!==DB.passwords.member){document.getElementById('login-err').textContent='รหัสผ่านไม่ถูกต้อง';return;}
+    const m=MEMBERS.find(x=>x.id===mid);
+    SESSION={role:'member',name:m.name,memberId:mid};startApp();
+  }
+}
+function doLogout(){
+  SESSION={role:'',name:'',memberId:''};
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-member-pass').value='';
+}
+function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('sb-username').textContent=SESSION.name;
+  document.getElementById('sb-role').textContent=SESSION.role==='superadmin'?'Super Admin':SESSION.role==='admin'?'Admin':'สมาชิก';
+  document.getElementById('nav-settings').classList.toggle('hidden',!isSuperAdmin());
+  document.getElementById('nav-approval').classList.toggle('hidden',!isAdmin());
+  populateSelects();initDates();applyRoleUI();
+  go('dashboard');
+}
+function applyRoleUI(){
+  const admin=isAdmin();
+  ['tx-form-wrap','po-form-wrap','repay-form-wrap'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display=admin?'block':'none';
+  });
+}
+
+// ===== NAV =====
+function go(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const allNav=document.querySelectorAll('.nav-item');
+  const pageOrder=['dashboard','approval','transactions','payouts','loans','members','settings'];
+  const idx=pageOrder.indexOf(name);
+  let navIdx=0,count=0;
+  allNav.forEach((el,i)=>{
+    if(!el.classList.contains('hidden')){
+      if(count===idx) navIdx=i;
+      count++;
+    }
+  });
+  // simpler: just match by onclick
+  allNav.forEach(el=>{
+    if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+name+"'")) el.classList.add('active');
+  });
+  renders[name]&&renders[name]();
+}
+
+// ===== BALANCE =====
+function calcBalance(){
+  let income=0,expense=0,payout=0,loanOut=0,repaid=0;
+  DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
+  DB.payouts.forEach(p=>payout+=+p.amount);
+  DB.loans.filter(l=>l.status==='approved').forEach(l=>loanOut+=+l.amount);
+  DB.repayments.forEach(r=>repaid+=+r.amount);
+  return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
+}
+function updateSidebar(){
+  const{balance}=calcBalance();
+  const el=document.getElementById('sb-balance');
+  el.textContent='฿'+fmt(balance);
+  el.className='sb-val'+(balance<0?' neg':'');
+  const pending=DB.loans.filter(l=>l.status==='pending').length;
+  const badge=document.getElementById('approval-badge');
+  if(badge){badge.textContent=pending;badge.style.display=pending>0?'flex':'none';}
+}
+
+// ===== RENDERS =====
+const renders={
+  dashboard(){
+    const{income,expense,payout,loanOut,repaid,balance}=calcBalance();
+    document.getElementById('stat-cards').innerHTML=[
+      {l:'ยอดเงินคงเหลือ',v:'฿'+fmt(balance),c:balance>=0?'green':'red',i:'💰'},
+      {l:'รายรับรวม',v:'฿'+fmt(income),c:'green',i:'📈'},
+      {l:'รายจ่ายรวม',v:'฿'+fmt(expense+payout),c:'red',i:'📉'},
+      {l:'กู้คงค้างสุทธิ',v:'฿'+fmt(Math.max(0,loanOut-repaid)),c:'amber',i:'📄'},
+      {l:'จ่ายสมาชิกรวม',v:'฿'+fmt(payout),c:'blue',i:'👥'},
+      {l:'รับคืนเงินกู้รวม',v:'฿'+fmt(repaid),c:'purple',i:'↩️'},
+    ].map(c=>`<div class="stat-card"><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
+    const all=[
+      ...DB.transactions.map(t=>({date:t.date,label:t.category||'รายการ',type:t.type,amount:t.amount})),
+      ...DB.payouts.map(p=>({date:p.date,label:'จ่าย: '+mName(p.member),type:'payout',amount:p.amount})),
+      ...DB.loans.filter(l=>l.status==='approved').map(l=>({date:l.date,label:'กู้: '+mName(l.member),type:'loan',amount:l.amount})),
+    ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+    const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
+    const labels={income:'รายรับ',expense:'รายจ่าย',payout:'จ่ายสมาชิก',loan:'กู้เงิน'};
+    document.getElementById('recent-items').innerHTML=all.length?all.map(r=>`
+      <div class="recent-item"><div class="ri-left"><div class="ri-dot" style="background:${colors[r.type]}"></div>
+      <div><div class="ri-label">${r.label}</div><div class="ri-date">${fmtDate(r.date)} · ${labels[r.type]}</div></div></div>
+      <div class="ri-amount" style="color:${colors[r.type]}">฿${fmt(r.amount)}</div></div>`)
+      .join(''):'<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">ยังไม่มีรายการ</div>';
+    const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
+    document.getElementById('member-summary').innerHTML=MEMBERS.map(m=>{
+      const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
+      const ln=DB.loans.filter(l=>l.member===m.id&&l.status==='approved').reduce((s,l)=>s+(+l.amount),0);
+      const out=ln-(rMap[m.id]||0);
+      return`<div class="recent-item"><div class="ri-left">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1px solid rgba(240,165,0,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent)">${m.initials}</div>
+        <div class="ri-label">${m.name}</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--text3)">รับ ฿${fmt(po)}</div>${out>0?`<div style="font-size:11px;color:var(--red)">กู้ ฿${fmt(out)}</div>`:''}</div></div>`;
+    }).join('');
+    updateSidebar();
+  },
+
+  approval(){
+    const pending=DB.loans.filter(l=>l.status==='pending').sort((a,b)=>b.date.localeCompare(a.date));
+    const wrap=document.getElementById('approval-list');
+    if(!pending.length){
+      wrap.innerHTML=`<div class="empty-approval"><div class="icon">✅</div><p>ไม่มีคำร้องรอพิจารณา</p></div>`;
+      return;
+    }
+    wrap.innerHTML=pending.map(l=>{
+      let extraInfo='';
+      if(l.loanType==='once'&&l.returnDate) extraInfo=`<div class="ac-meta-item">📆 กำหนดคืน: <span>${fmtDate(l.returnDate)}</span></div>`;
+      if(l.loanType==='daily'&&l.dailyRate) extraInfo=`<div class="ac-meta-item">📊 หักวันละ: <span>฿${fmt(l.dailyRate)} · เริ่ม ${fmtDate(l.startDate)}</span></div>`;
+      return`<div class="approval-card">
+        <div class="ac-header">
+          <div class="ac-left">
+            <div class="ac-member">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--bg4);border:1.5px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent);flex-shrink:0">${mInit(l.member)}</div>
+              ${mName(l.member)}
+            </div>
+            <div class="ac-amount">฿${fmt(l.amount)} บาท</div>
+            <div class="ac-meta">
+              <div class="ac-meta-item">📅 วันที่กู้: <span>${fmtDate(l.date)}</span></div>
+              <div class="ac-meta-item">🏷 ประเภท: <span><span class="badge ${TYPE_BADGE[l.loanType]||'badge-loan'}">${TYPE_LABEL[l.loanType]||l.loanType}</span></span></div>
+              ${extraInfo}
+            </div>
+            ${l.reason?`<div class="ac-note">📝 ${l.reason}</div>`:''}
+            <div class="ac-actions">
+              <button class="btn-approve-big" onclick="openApproveModal(${l.id},'approve')">✓ อนุมัติ</button>
+              <button class="btn-reject-big" onclick="openApproveModal(${l.id},'reject')">✕ ไม่อนุมัติ</button>
+              <button class="btn-share-sm" onclick="openShareModal(${l.id})">📤 แชร์</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    updateSidebar();
+  },
+
+  transactions(){
+    const admin=isAdmin();
+    const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date));
+    document.getElementById('tx-list').innerHTML=sorted.length?sorted.map(t=>`<tr>
+      <td>${fmtDate(t.date)}</td>
+      <td><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td>${t.category||'-'}</td><td style="color:var(--text3)">${t.note||'-'}</td>
+      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</td>
+      <td>${admin?`<button class="btn-del" onclick="del('transactions',${t.id})">🗑</button>`:''}</td></tr>`).join('')
+      :'<tr class="empty-row"><td colspan="6">ยังไม่มีรายการ</td></tr>';
+    updateSidebar();
+  },
+
+  payouts(){
+    const admin=isAdmin();
+    const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date));
+    document.getElementById('po-list').innerHTML=sorted.length?sorted.map(p=>`<tr>
+      <td>${fmtDate(p.date)}</td><td>${mName(p.member)}</td><td style="color:var(--text3)">${p.note||'-'}</td>
+      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--blue)">฿${fmt(p.amount)}</td>
+      <td>${admin?`<button class="btn-del" onclick="del('payouts',${p.id})">🗑</button>`:''}</td></tr>`).join('')
+      :'<tr class="empty-row"><td colspan="5">ยังไม่มีรายการ</td></tr>';
+    updateSidebar();
+  },
+
+  loans(){
+    const admin=isAdmin();
+    const sorted=[...DB.loans].sort((a,b)=>b.date.localeCompare(a.date));
+    document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
+      let extra='';
+      if(l.loanType==='once'&&l.returnDate) extra=`<br><span style="font-size:11px;color:var(--text3)">คืน ${fmtDate(l.returnDate)}</span>`;
+      if(l.loanType==='daily'&&l.dailyRate) extra=`<br><span style="font-size:11px;color:var(--text3)">วันละ ${fmt(l.dailyRate)} · เริ่ม ${fmtDate(l.startDate)}</span>`;
+      return`<tr>
+        <td>${fmtDate(l.date)}</td><td>${mName(l.member)}</td>
+        <td><span class="badge ${TYPE_BADGE[l.loanType]||'badge-loan'}">${TYPE_LABEL[l.loanType]||'-'}</span>${extra}</td>
+        <td style="color:var(--text3)">${l.reason||'-'}</td>
+        <td><span class="badge badge-${l.status}">${l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></td>
+        <td style="font-size:12px;color:var(--text3)">${l.approvedBy||'-'}</td>
+        <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--amber)">฿${fmt(l.amount)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-del btn-sm" onclick="openShareModal(${l.id})" title="แชร์" style="color:var(--text2)">📤</button>
+          ${admin?`<button class="btn-del" onclick="del('loans',${l.id})">🗑</button>`:''}
+        </td></tr>`;
+    }).join(''):'<tr class="empty-row"><td colspan="8">ยังไม่มีรายการ</td></tr>';
+
+    const rsorted=[...DB.repayments].sort((a,b)=>b.date.localeCompare(a.date));
+    document.getElementById('lr-list').innerHTML=rsorted.length?rsorted.map(r=>`<tr>
+      <td>${fmtDate(r.date)}</td><td>${mName(r.member)}</td><td style="color:var(--text3)">${r.note||'-'}</td>
+      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--green)">฿${fmt(r.amount)}</td>
+      <td>${admin?`<button class="btn-del" onclick="del('repayments',${r.id})">🗑</button>`:''}</td></tr>`).join('')
+      :'<tr class="empty-row"><td colspan="5">ยังไม่มีรายการ</td></tr>';
+    updateSidebar();
+  },
+
+  members(){
+    const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
+    document.getElementById('member-grid').innerHTML=MEMBERS.map(m=>{
+      const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
+      const lnT=DB.loans.filter(l=>l.member===m.id&&l.status==='approved').reduce((s,l)=>s+(+l.amount),0);
+      const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+l.amount),0);
+      const repaid=rMap[m.id]||0;const out=lnT-repaid;
+      return`<div class="member-card">
+        <div class="m-avatar">${m.initials}</div>
+        <div class="m-name">${m.name}</div>
+        <div class="m-divider"></div>
+        <div class="m-stat"><span>รับเงินรวม</span><span>฿${fmt(po)}</span></div>
+        <div class="m-stat"><span>กู้อนุมัติรวม</span><span>฿${fmt(lnT)}</span></div>
+        <div class="m-stat"><span>คืนแล้ว</span><span>฿${fmt(repaid)}</span></div>
+        <div class="m-stat"><span>กู้คงค้าง</span><span class="${out>0?'neg':''}">฿${fmt(out)}</span></div>
+        ${lnP>0?`<div class="m-stat"><span style="color:var(--amber)">รอพิจารณา</span><span style="color:var(--amber)">฿${fmt(lnP)}</span></div>`:''}
+      </div>`;
+    }).join('');
+  },
+
+  settings(){}
+};
+
+// ===== LOAN FORM =====
+let currentLoanType='once';
+function setLoanType(t){
+  currentLoanType=t;
+  document.querySelectorAll('.lt-tab').forEach((b,i)=>{
+    const ts=['once','tip-all','tip-part','daily','fee'];
+    b.classList.toggle('active',ts[i]===t);
+  });
+  document.querySelectorAll('.loan-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+}
+function checkMax(el,max,warnId){
+  const v=+el.value;const w=document.getElementById(warnId);
+  if(v>max){el.value=max;if(w)w.style.display='block';}
+  else{if(w)w.style.display='none';}
+}
+function checkReturnDate(){
+  const d1=document.getElementById('ln-once-date').value;
+  const d2=document.getElementById('ln-once-return').value;
+  const w=document.getElementById('ln-once-return-warn');
+  if(!d1||!d2){if(w)w.style.display='none';return;}
+  const diff=(new Date(d2)-new Date(d1))/(864e5);
+  if(w)w.style.display=diff>15?'block':'none';
+}
+
+function addLoan(type){
+  const pfx={once:'ln-once','tip-all':'ln-tipall','tip-part':'ln-tippart',daily:'ln-daily',fee:'ln-fee'}[type];
+  const date=document.getElementById(pfx+'-date').value||today();
+  const member=document.getElementById(pfx+'-member').value;
+  const amount=+document.getElementById(pfx+'-amount').value;
+  const reasonEl=document.getElementById(pfx+'-reason');
+  const reason=reasonEl?reasonEl.value.trim():'';
+  if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
+  const limit=TYPE_LIMIT[type];
+  if(amount>limit){alert('กู้ประเภทนี้ได้ไม่เกิน '+fmt(limit)+' บาท/ครั้ง');return;}
+  if(type==='once'){
+    const ret=document.getElementById('ln-once-return').value;
+    if(ret){const diff=(new Date(ret)-new Date(date))/(864e5);if(diff>15){alert('วันที่คืนต้องไม่เกิน 15 วันนับจากวันกู้');return;}}
+  }
+  const loan={id:Date.now(),date,member,amount,reason,loanType:type,status:'pending',approvedBy:''};
+  if(type==='once') loan.returnDate=document.getElementById('ln-once-return').value;
+  if(type==='daily'){loan.dailyRate=+document.getElementById('ln-daily-rate').value;loan.startDate=document.getElementById('ln-daily-start').value;}
+  DB.loans.push(loan);
+  // clear
+  document.getElementById(pfx+'-amount').value='';
+  if(reasonEl)reasonEl.value='';
+  toast('ยื่นคำร้องกู้เงินสำเร็จ — รอผู้ดูแลพิจารณา');
+  renders.loans();updateSidebar();
+  saveRow('loans',loan);
+  openShareModal(loan.id);
+}
+
+// ===== APPROVE MODAL =====
+let pendingApprovalId=null,pendingApprovalAction='';
+function openApproveModal(id,action){
+  const l=DB.loans.find(x=>x.id===id);if(!l)return;
+  pendingApprovalId=id;pendingApprovalAction=action;
+  const isApprove=action==='approve';
+  document.getElementById('approve-modal-title').textContent=isApprove?'ยืนยันการอนุมัติ':'ยืนยันการไม่อนุมัติ';
+  document.getElementById('approve-modal-sub').textContent=(isApprove?'กดอนุมัติ':'กดไม่อนุมัติ')+' แล้วใส่รหัสผ่านผู้ดูแลเพื่อยืนยัน';
+  let extra='';
+  if(l.loanType==='once'&&l.returnDate) extra+=`<div class="modal-info-row"><span class="k">กำหนดคืน</span><span class="v">${fmtDate(l.returnDate)}</span></div>`;
+  if(l.loanType==='daily'&&l.dailyRate) extra+=`<div class="modal-info-row"><span class="k">หักรายวัน</span><span class="v">฿${fmt(l.dailyRate)} · เริ่ม ${fmtDate(l.startDate)}</span></div>`;
+  document.getElementById('approve-modal-info').innerHTML=`
+    <div class="modal-info-row"><span class="k">สมาชิก</span><span class="v">${mName(l.member)}</span></div>
+    <div class="modal-info-row"><span class="k">ประเภท</span><span class="v">${TYPE_LABEL[l.loanType]||'-'}</span></div>
+    <div class="modal-info-row"><span class="k">เหตุผล</span><span class="v">${l.reason||'-'}</span></div>
+    ${extra}
+    <div class="modal-info-row"><span class="k">จำนวนเงิน</span><span class="v big">฿${fmt(l.amount)} บาท</span></div>`;
+  document.getElementById('approve-pin').value='';
+  document.getElementById('approve-pin-err').textContent='';
+  document.getElementById('approve-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('approve-pin').focus(),100);
+}
+function closeApproveModal(){
+  document.getElementById('approve-modal').classList.remove('show');
+  pendingApprovalId=null;
+}
+function confirmApprove(forceAction){
+  const action=forceAction||pendingApprovalAction;
+  const pin=document.getElementById('approve-pin').value;
+  const errEl=document.getElementById('approve-pin-err');
+  errEl.textContent='';
+  if(pin!==DB.passwords.admin1&&pin!==DB.passwords.admin2){
+    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('approve-pin').style.borderColor='var(--red)';
+    setTimeout(()=>document.getElementById('approve-pin').style.borderColor='',1500);
+    return;
+  }
+  const approver=pin===DB.passwords.admin1?'ชิษณุพงศ์ สาริกา':'กฤษติญา เทพธานี';
+  const l=DB.loans.find(x=>String(x.id)===String(pendingApprovalId));
+  if(l){
+    l.status=action==='approve'?'approved':'rejected';
+    l.approvedBy=approver;
+    updateSheetRow('loans',l.id,{status:l.status,approvedBy:l.approvedBy});
+  }
+  closeApproveModal();
+  const msg=action==='approve'?`อนุมัติคำร้องของ ${mName(l.member)} สำเร็จ`:`ไม่อนุมัติคำร้องของ ${mName(l.member)}`;
+  toast(msg);
+  renders.approval();updateSidebar();
+}
+
+// ===== CRUD =====
+function addTransaction(){
+  if(!isAdmin()){toast('เฉพาะผู้ดูแลเท่านั้น');return;}
+  const date=document.getElementById('tx-date').value||today();
+  const type=document.getElementById('tx-type').value;
+  const amount=+document.getElementById('tx-amount').value;
+  const category=document.getElementById('tx-cat').value.trim();
+  const note=document.getElementById('tx-note').value.trim();
+  if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
+  const row={id:Date.now(),date,type,amount,category,note};
+  DB.transactions.push(row);
+  renders.transactions();
+  saveRow('transactions',row);
+  document.getElementById('tx-amount').value='';
+  document.getElementById('tx-cat').value='';
+  document.getElementById('tx-note').value='';
+  toast('บันทึกรายการสำเร็จ');
+}
+function addPayout(){
+  if(!isAdmin()){toast('เฉพาะผู้ดูแลเท่านั้น');return;}
+  const date=document.getElementById('po-date').value||today();
+  const member=document.getElementById('po-member').value;
+  const amount=+document.getElementById('po-amount').value;
+  const note=document.getElementById('po-note').value.trim();
+  if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
+  const row={id:Date.now(),date,member,amount,note};
+  DB.payouts.push(row);
+  renders.payouts();
+  saveRow('payouts',row);
+  document.getElementById('po-amount').value='';
+  document.getElementById('po-note').value='';
+  toast('บันทึกการจ่ายเงินสำเร็จ');
+}
+function addRepay(){
+  if(!isAdmin()){toast('เฉพาะผู้ดูแลเท่านั้น');return;}
+  const date=document.getElementById('lr-date').value||today();
+  const member=document.getElementById('lr-member').value;
+  const amount=+document.getElementById('lr-amount').value;
+  const note=document.getElementById('lr-note').value.trim();
+  if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
+  const row={id:Date.now(),date,member,amount,note};
+  DB.repayments.push(row);
+  renders.loans();
+  saveRow('repayments',row);
+  document.getElementById('lr-amount').value='';
+  document.getElementById('lr-note').value='';
+  toast('บันทึกการคืนเงินสำเร็จ');
+}
+function del(col,id){
+  if(!isAdmin()){toast('เฉพาะผู้ดูแลเท่านั้น');return;}
+  if(!confirm('ยืนยันการลบรายการนี้?'))return;
+  DB[col]=DB[col].filter(x=>String(x.id)!==String(id));
+  const pmap={transactions:'transactions',payouts:'payouts',loans:'loans',repayments:'loans'};
+  renders[pmap[col]]();
+  deleteSheetRow(col,id);
+  toast('ลบรายการสำเร็จ');
+}
+
+// ===== SETTINGS =====
+function changePwd(who){
+  if(!isSuperAdmin()){toast('เฉพาะ ชิษณุพงศ์ เท่านั้น');return;}
+  const map={admin1:['pwd-admin1','pwd-admin1-c'],admin2:['pwd-admin2','pwd-admin2-c'],member:['pwd-member','pwd-member-c']};
+  const[a,b]=map[who];
+  const p1=document.getElementById(a).value;
+  const p2=document.getElementById(b).value;
+  if(!p1){alert('กรุณากรอกรหัสผ่านใหม่');return;}
+  if(p1!==p2){alert('รหัสผ่านไม่ตรงกัน');return;}
+  DB.passwords[who]=p1;
+  savePasswordToSheet(who,p1);
+  document.getElementById(a).value='';document.getElementById(b).value='';
+  toast('เปลี่ยนรหัสผ่านสำเร็จ');
+}
+
+// ===== SHARE =====
+let shareData={};
+function openShareModal(id){
+  const l=DB.loans.find(x=>String(x.id)===String(id));if(!l)return;
+  shareData=l;drawCanvas(l);
+  // show native share button only if Web Share API supported (mobile)
+  const nativeBtn=document.getElementById('btn-native-share');
+  const hint=document.getElementById('share-hint');
+  if(navigator.share && navigator.canShare){
+    nativeBtn.style.display='inline-flex';
+    hint.textContent='กด "แชร์ไปไลน์" เพื่อเปิดเมนูแชร์ของมือถือ';
+  } else {
+    nativeBtn.style.display='none';
+    hint.textContent='บันทึกภาพแล้วเปิดไลน์ → แนบรูปได้เลย';
+  }
+  document.getElementById('share-modal').classList.add('show');
+}
+function closeShareModal(){document.getElementById('share-modal').classList.remove('show');}
+async function nativeShare(){
+  const canvas=document.getElementById('share-canvas');
+  const l=shareData;
+  try{
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const file=new File([blob],'loan_'+mName(l.member)+'_'+today()+'.png',{type:'image/png'});
+    const text=buildShareText(l);
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:'ใบคำร้องกู้เงิน — Big Seven Band',text,files:[file]});
+    } else {
+      await navigator.share({title:'ใบคำร้องกู้เงิน — Big Seven Band',text});
+    }
+  }catch(e){
+    if(e.name!=='AbortError') downloadImg();
+  }
+}
+function buildShareText(l){
+  const lines=['📋 ใบคำร้องกู้เงิน — Big Seven Band','━━━━━━━━━━━━━━━━',
+    `👤 สมาชิก: ${mName(l.member)}`,`📅 วันที่กู้: ${fmtDate(l.date)}`,
+    `🏷 ประเภท: ${TYPE_LABEL[l.loanType]||'-'}`,`💰 จำนวน: ฿${fmt(l.amount)} บาท`,
+    `📝 เหตุผล: ${l.reason||'-'}`,
+    `📌 สถานะ: ${l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'}`,
+  ];
+  if(l.loanType==='once'&&l.returnDate)lines.push(`📆 กำหนดคืน: ${fmtDate(l.returnDate)}`);
+  if(l.loanType==='daily'&&l.dailyRate)lines.push(`📊 หักรายวัน: วันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}`);
+  if(l.approvedBy)lines.push(`✅ ผู้อนุมัติ: ${l.approvedBy}`);
+  lines.push('━━━━━━━━━━━━━━━━');
+  return lines.join('\n');
+}
+function drawCanvas(l){
+  const canvas=document.getElementById('share-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=420,H=310;canvas.width=W;canvas.height=H;
+  ctx.fillStyle='#13161e';roundRect(ctx,0,0,W,H,14);ctx.fill();
+  ctx.fillStyle='#f0a500';roundRect(ctx,0,0,W,7,0);ctx.fill();
+  ctx.fillStyle='#f0eeea';ctx.font='bold 16px sans-serif';ctx.fillText('ใบคำร้องกู้เงิน — Big Seven Band',20,34);
+  ctx.fillStyle='#6b7280';ctx.font='12px sans-serif';ctx.fillText('วันที่ออก: '+fmtDate(today()),20,52);
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(20,62);ctx.lineTo(W-20,62);ctx.stroke();
+  const rows=[
+    ['สมาชิก',mName(l.member)],
+    ['วันที่กู้',fmtDate(l.date)],
+    ['ประเภทการคืน',TYPE_LABEL[l.loanType]||l.loanType],
+    ['จำนวนเงิน','฿'+fmt(l.amount)+' บาท'],
+    ['เหตุผล',l.reason||'-'],
+    ['สถานะ',l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'],
+  ];
+  if(l.loanType==='once'&&l.returnDate)rows.push(['กำหนดคืน',fmtDate(l.returnDate)]);
+  if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDate(l.startDate)]);
+  if(l.approvedBy)rows.push(['ผู้อนุมัติ',l.approvedBy]);
+  let y=82;
+  rows.forEach(([k,v])=>{
+    ctx.fillStyle='#9ca3af';ctx.font='12px sans-serif';ctx.fillText(k,20,y);
+    ctx.fillStyle=k==='จำนวนเงิน'?'#f0a500':k==='สถานะ'&&l.status==='approved'?'#22c55e':'#f0eeea';
+    ctx.font=k==='จำนวนเงิน'?'bold 14px sans-serif':'13px sans-serif';
+    ctx.fillText(v,160,y);y+=26;
+  });
+  ctx.fillStyle='rgba(255,255,255,0.04)';roundRect(ctx,20,H-34,W-40,26,7);ctx.fill();
+  ctx.fillStyle='#6b7280';ctx.font='11px sans-serif';ctx.fillText('กองทุนวง Big Seven Band · ออกโดยระบบอัตโนมัติ',32,H-16);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function downloadImg(){
+  const canvas=document.getElementById('share-canvas');
+  const dataURL=canvas.toDataURL('image/png');
+  // open in new tab — user right-clicks to save (works on all browsers from file://)
+  const w=window.open('','_blank');
+  if(w){
+    w.document.write('<html><head><title>ยอดกู้เงิน</title><style>body{margin:0;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;font-family:sans-serif}</style></head><body>');
+    w.document.write('<img src="'+dataURL+'" style="border-radius:12px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.6)">');
+    w.document.write('<p style="color:#9ca3af;font-size:14px;text-align:center">คลิกขวาที่รูป → <b style="color:#f0eeea">บันทึกรูปภาพ</b> แล้วส่งไปไลน์ได้เลย</p>');
+    w.document.write('</body></html>');
+    w.document.close();
+    toast('เปิดภาพในแท็บใหม่แล้ว — คลิกขวาเพื่อบันทึก');
+  }
+}
+function copyText(){
+  navigator.clipboard.writeText(buildShareText(shareData)).then(()=>toast('คัดลอกข้อความสำเร็จ'));
+}
+
+// ===== SELECTS & INIT =====
+function populateSelects(){
+  const opts=MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  const mlist=document.getElementById('login-member-name');
+  if(mlist)mlist.innerHTML='<option value="">เลือกชื่อสมาชิก</option>'+opts;
+  ['po-member','lr-member','ln-once-member','ln-tipall-member','ln-tippart-member','ln-daily-member','ln-fee-member'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=opts;
+  });
+}
+function initDates(){
+  ['tx-date','po-date','ln-once-date','ln-once-return','ln-tipall-date','ln-tippart-date','ln-daily-date','ln-daily-start','ln-fee-date','lr-date'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value=today();
+  });
+}
+
+// ===== START =====
+loadDB().then(()=>{
+  populateSelects();
+  startAutoRefresh();
+});
+</script>
+</body>
+</html>
