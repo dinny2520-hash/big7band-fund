@@ -1131,15 +1131,16 @@ let shareData={};
 function openShareModal(id){
   const l=DB.loans.find(x=>String(x.id)===String(id));if(!l)return;
   shareData=l;drawCanvas(l);
-  // show native share button only if Web Share API supported (mobile)
   const nativeBtn=document.getElementById('btn-native-share');
   const hint=document.getElementById('share-hint');
-  if(navigator.share && navigator.canShare){
+  // Web Share API ใช้ได้บนมือถือที่เป็น https หรือ localhost
+  const canNativeShare = typeof navigator.share === 'function';
+  if(canNativeShare){
     nativeBtn.style.display='inline-flex';
     hint.textContent='กด "แชร์ไปไลน์" เพื่อเปิดเมนูแชร์ของมือถือ';
   } else {
     nativeBtn.style.display='none';
-    hint.textContent='บันทึกภาพแล้วเปิดไลน์ → แนบรูปได้เลย';
+    hint.textContent='เปิดภาพในแท็บใหม่ → คลิกขวา → บันทึกรูป → ส่งไลน์';
   }
   document.getElementById('share-modal').classList.add('show');
 }
@@ -1147,17 +1148,22 @@ function closeShareModal(){document.getElementById('share-modal').classList.remo
 async function nativeShare(){
   const canvas=document.getElementById('share-canvas');
   const l=shareData;
+  const text=buildShareText(l);
   try{
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
     const file=new File([blob],'loan_'+mName(l.member)+'_'+today()+'.png',{type:'image/png'});
-    const text=buildShareText(l);
+    // ลองส่งพร้อมไฟล์รูปก่อน
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({title:'ใบคำร้องกู้เงิน — Big Seven Band',text,files:[file]});
     } else {
+      // fallback: ส่งแค่ข้อความ
       await navigator.share({title:'ใบคำร้องกู้เงิน — Big Seven Band',text});
     }
   }catch(e){
-    if(e.name!=='AbortError') downloadImg();
+    if(e.name!=='AbortError'){
+      // fallback สุดท้าย: เปิดภาพในแท็บใหม่
+      downloadImg();
+    }
   }
 }
 function buildShareText(l){
