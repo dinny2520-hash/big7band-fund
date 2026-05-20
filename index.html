@@ -242,6 +242,7 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ===== MOBILE RESPONSIVE ===== */
 @media(max-width:768px){
+  html{font-size:16px!important}
   html,body{width:100%;max-width:100vw;overflow-x:hidden}
   .layout{display:block;width:100%}
   .sidebar{display:none!important}
@@ -251,7 +252,7 @@ tbody tr:last-child td{border-bottom:none}
     margin-left:0!important;
     width:100%!important;
     max-width:100vw;
-    padding:60px 14px calc(var(--nav-h) + 14px);
+    padding:60px 16px calc(var(--nav-h) + 16px);
     overflow-x:hidden;
   }
   .page{width:100%;max-width:100%}
@@ -261,9 +262,28 @@ tbody tr:last-child td{border-bottom:none}
   .modal-overlay{align-items:flex-end}
   .modal-box{max-width:100%;border-radius:20px 20px 0 0}
   .toast{bottom:calc(var(--nav-h) + 12px);max-width:90vw;white-space:normal;text-align:center}
-  .card{padding:14px}
-  .page-title{font-size:18px}
-  /* ซ่อนปุ่มลบบนมือถือสมาชิก */
+  .card{padding:16px}
+  .page-title{font-size:20px!important}
+  .page-sub{font-size:14px!important}
+  .stat-val{font-size:20px!important}
+  .stat-label{font-size:13px!important}
+  .card-title{font-size:16px!important}
+  .field label{font-size:13px!important}
+  .field input,.field select,.field textarea{font-size:16px!important}
+  .btn{font-size:16px!important;padding:12px 18px!important}
+  .nav-item,.bn-item span{font-size:13px!important}
+  .mobile-topbar-title{font-size:16px!important}
+  .mobile-topbar-balance{font-size:15px!important}
+  table{font-size:13px!important}
+  .badge{font-size:12px!important}
+  .ri-label{font-size:14px!important}
+  .ri-sub{font-size:12px!important}
+  .ri-amount{font-size:15px!important}
+  .m-name{font-size:14px!important}
+  .m-stat{font-size:13px!important}
+  .lt-tab{font-size:14px!important;padding:8px 14px!important}
+  .login-input,.member-select,.login-tab{font-size:16px!important}
+  .login-btn{font-size:17px!important}
 }
 }
 @media(max-width:480px){
@@ -1358,57 +1378,56 @@ loadDB().then(()=>{
 // บังคับเปิดใน browser ภายนอก ถ้าเปิดจาก LINE In-App Browser
 (function(){
   const ua=navigator.userAgent||'';
-  const isLine=/Line\//i.test(ua)||/FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+  // LINE In-App Browser มี "Line/" ใน UA เสมอ
+  const isLine=/Line\//i.test(ua);
   if(!isLine) return;
 
   const isAndroid=/Android/i.test(ua);
-  const isIOS=/iPhone|iPad|iPod/i.test(ua);
   const url=location.href;
 
-  if(isAndroid){
-    // ลอง googlechrome:// scheme ก่อน
-    const chromeUrl='googlechrome://navigate?url='+encodeURIComponent(url);
-    const intentUrl='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
-    
-    // สร้าง iframe ซ่อนเพื่อ trigger intent
-    try{
-      const iframe=document.createElement('iframe');
-      iframe.style.display='none';
-      iframe.src=intentUrl;
-      document.body.appendChild(iframe);
-      setTimeout(()=>document.body.removeChild(iframe),500);
-    }catch(e){}
-    
-    // เปิด Chrome ด้วย window.location
-    setTimeout(()=>{ window.location.href=intentUrl; },100);
-  }
-
-  // แสดง overlay สำหรับทุก platform (แสดงก่อนเสมอ)
+  // สร้าง overlay ก่อนเลย
   const overlay=document.createElement('div');
-  overlay.id='line-overlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;font-family:Sarabun,sans-serif';
 
-  let content='';
   if(isAndroid){
-    content=`
-      <div style="font-size:15px;color:#9ca3af;margin-bottom:8px;line-height:1.6">กำลังเปิด Chrome...<br>ถ้าไม่เปิดอัตโนมัติ กดปุ่มด้านล่าง</div>
-      <a href="intent://${url.replace(/^https?:\/\//,'')}#Intent;scheme=https;package=com.android.chrome;end" style="display:block;width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border-radius:10px;font-family:Kanit,sans-serif;font-size:16px;font-weight:600;text-decoration:none;margin-bottom:12px">🌐 เปิดใน Chrome</a>
-      <button onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='✓ คัดลอกแล้ว!';this.style.color='#22c55e'})" style="padding:12px 24px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:10px;font-family:Sarabun,sans-serif;font-size:14px;cursor:pointer">📋 คัดลอก URL ไปวางใน Chrome</button>`;
-  } else if(isIOS){
-    content=`
-      <div style="font-size:15px;color:#9ca3af;margin-bottom:8px;line-height:1.6">กรุณาเปิดใน Safari</div>
-      <div style="font-size:13px;color:#6b7280;margin-bottom:24px;line-height:1.8">กดไอคอน <b style="color:#f0eeea">···</b> หรือ <b style="color:#f0eeea">⋮</b> มุมขวาบน<br>→ เลือก <b style="color:#f0eeea">"เปิดใน Safari"</b><br>หรือคัดลอก URL ด้านล่าง</div>
-      <button onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='✓ คัดลอกแล้ว! วางใน Safari';this.style.background='#22c55e';this.style.color='#000'})" style="width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border:none;border-radius:10px;font-family:Kanit,sans-serif;font-size:15px;font-weight:600;cursor:pointer">📋 คัดลอก URL</button>
-      <div style="font-size:11px;color:#4b5563;margin-top:12px;word-break:break-all;max-width:280px">${url}</div>`;
+    const intentUrl='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+    overlay.innerHTML=`
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px;font-family:Kanit,sans-serif">B7</div>
+      <div style="font-family:Kanit,sans-serif;font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
+      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
+      <div style="font-size:15px;color:#9ca3af;margin-bottom:20px;line-height:1.6">กรุณาเปิดในเบราว์เซอร์ Chrome</div>
+      <a href="${intentUrl}" style="display:block;width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border-radius:10px;font-family:Kanit,sans-serif;font-size:16px;font-weight:600;text-decoration:none;margin-bottom:12px">🌐 เปิดใน Chrome</a>
+      <button onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='✓ คัดลอกแล้ว!';this.style.color='#22c55e'})" style="padding:12px 24px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:10px;font-family:Sarabun,sans-serif;font-size:14px;cursor:pointer;width:100%;max-width:280px">📋 คัดลอก URL ไปวางใน Chrome</button>`;
+    document.documentElement.appendChild(overlay);
+    // พยายาม redirect อัตโนมัติ
+    setTimeout(()=>{ try{ location.href=intentUrl; }catch(e){} },300);
+  } else {
+    // iOS — ลอง open ใน Safari ด้วย x-safari scheme ก่อน
+    const safariUrl='x-web-search://?'+encodeURIComponent(url);
+    // วิธีที่ดีที่สุดบน iOS คือแสดง UI ชัดเจน
+    overlay.innerHTML=`
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px;font-family:Kanit,sans-serif">B7</div>
+      <div style="font-family:Kanit,sans-serif;font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
+      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
+      <div style="font-size:15px;color:#f0eeea;margin-bottom:6px;font-weight:500">วิธีเปิดใน Safari</div>
+      <div style="font-size:14px;color:#9ca3af;margin-bottom:24px;line-height:2">
+        1. กดปุ่ม <b style="color:#f0eeea">···</b> มุมขวาบน<br>
+        2. เลือก <b style="color:#f0eeea">"เปิดใน Safari"</b>
+      </div>
+      <button id="copy-btn-ios" onclick="
+        navigator.clipboard.writeText('${url}').then(()=>{
+          document.getElementById('copy-btn-ios').textContent='✓ คัดลอกแล้ว! วางใน Safari';
+          document.getElementById('copy-btn-ios').style.background='#22c55e';
+          document.getElementById('copy-btn-ios').style.color='#000';
+        }).catch(()=>{
+          prompt('คัดลอก URL นี้แล้วเปิดใน Safari:','${url}');
+        })" 
+        style="width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border:none;border-radius:10px;font-family:Kanit,sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px">
+        📋 คัดลอก URL ไปเปิดใน Safari
+      </button>
+      <div style="font-size:11px;color:#4b5563;word-break:break-all;max-width:280px;margin-top:4px">${url}</div>`;
+    document.documentElement.appendChild(overlay);
   }
-
-  overlay.innerHTML=`
-    <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px;font-family:Kanit,sans-serif">B7</div>
-    <div style="font-family:Kanit,sans-serif;font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
-    <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
-    ${content}
-  `;
-  document.documentElement.appendChild(overlay);
 })();
 if('serviceWorker' in navigator){
   navigator.serviceWorker.getRegistrations().then(regs=>{
