@@ -622,6 +622,39 @@ tbody tr:last-child td{border-bottom:none}
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== LINE BLOCK — ต้องรันก่อนทุกอย่าง =====
+(function(){
+  const ua=navigator.userAgent||'';
+  const isLine=/Line\//i.test(ua);
+  if(!isLine) return;
+  const isAndroid=/Android/i.test(ua);
+  const url=location.href;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;font-family:sans-serif';
+  if(isAndroid){
+    const intentUrl='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+    overlay.innerHTML=`
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px">B7</div>
+      <div style="font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
+      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
+      <div style="font-size:15px;color:#9ca3af;margin-bottom:20px;line-height:1.6">กรุณาเปิดในเบราว์เซอร์ Chrome</div>
+      <a href="${intentUrl}" style="display:block;width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border-radius:10px;font-size:16px;font-weight:600;text-decoration:none;margin-bottom:12px">🌐 เปิดใน Chrome</a>
+      <button onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='✓ คัดลอกแล้ว!';this.style.color='#22c55e'})" style="padding:12px 24px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:10px;font-size:14px;cursor:pointer;width:100%;max-width:280px">📋 คัดลอก URL ไปวางใน Chrome</button>`;
+    document.documentElement.appendChild(overlay);
+    setTimeout(()=>{ try{ location.href=intentUrl; }catch(e){} },300);
+  } else {
+    overlay.innerHTML=`
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px">B7</div>
+      <div style="font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
+      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
+      <div style="font-size:15px;color:#f0eeea;margin-bottom:6px;font-weight:500">วิธีเปิดใน Safari</div>
+      <div style="font-size:14px;color:#9ca3af;margin-bottom:24px;line-height:2">1. กดปุ่ม <b style="color:#f0eeea">···</b> มุมขวาบน<br>2. เลือก <b style="color:#f0eeea">"เปิดใน Safari"</b></div>
+      <button id="ios-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>{document.getElementById('ios-copy').textContent='✓ คัดลอกแล้ว! วางใน Safari';document.getElementById('ios-copy').style.background='#22c55e';document.getElementById('ios-copy').style.color='#000'}).catch(()=>{prompt('คัดลอก URL:','${url}')})" style="width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px">📋 คัดลอก URL ไปเปิดใน Safari</button>
+      <div style="font-size:11px;color:#4b5563;word-break:break-all;max-width:280px">${url}</div>`;
+    document.documentElement.appendChild(overlay);
+  }
+})();
+
 // ===== CONFIG =====
 const API='https://script.google.com/macros/s/AKfycbwM0lq8wDipcD_3CNYbzo2IRjGJ6TPmuim5xqakuMQutJIVI05c2aiJ-jdzDExDDNPP/exec';
 const MEMBERS=[
@@ -1375,68 +1408,10 @@ loadDB().then(()=>{
   startAutoRefresh();
 });
 
-// บังคับเปิดใน browser ภายนอก ถ้าเปิดจาก LINE In-App Browser
-(function(){
-  const ua=navigator.userAgent||'';
-  // LINE In-App Browser มี "Line/" ใน UA เสมอ
-  const isLine=/Line\//i.test(ua);
-  if(!isLine) return;
-
-  const isAndroid=/Android/i.test(ua);
-  const url=location.href;
-
-  // สร้าง overlay ก่อนเลย
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;font-family:Sarabun,sans-serif';
-
-  if(isAndroid){
-    const intentUrl='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
-    overlay.innerHTML=`
-      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px;font-family:Kanit,sans-serif">B7</div>
-      <div style="font-family:Kanit,sans-serif;font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
-      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
-      <div style="font-size:15px;color:#9ca3af;margin-bottom:20px;line-height:1.6">กรุณาเปิดในเบราว์เซอร์ Chrome</div>
-      <a href="${intentUrl}" style="display:block;width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border-radius:10px;font-family:Kanit,sans-serif;font-size:16px;font-weight:600;text-decoration:none;margin-bottom:12px">🌐 เปิดใน Chrome</a>
-      <button onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='✓ คัดลอกแล้ว!';this.style.color='#22c55e'})" style="padding:12px 24px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:10px;font-family:Sarabun,sans-serif;font-size:14px;cursor:pointer;width:100%;max-width:280px">📋 คัดลอก URL ไปวางใน Chrome</button>`;
-    document.documentElement.appendChild(overlay);
-    // พยายาม redirect อัตโนมัติ
-    setTimeout(()=>{ try{ location.href=intentUrl; }catch(e){} },300);
-  } else {
-    // iOS — ลอง open ใน Safari ด้วย x-safari scheme ก่อน
-    const safariUrl='x-web-search://?'+encodeURIComponent(url);
-    // วิธีที่ดีที่สุดบน iOS คือแสดง UI ชัดเจน
-    overlay.innerHTML=`
-      <div style="width:64px;height:64px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin-bottom:20px;font-family:Kanit,sans-serif">B7</div>
-      <div style="font-family:Kanit,sans-serif;font-size:20px;font-weight:600;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>
-      <div style="font-size:13px;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 16px;margin-bottom:20px">⚠ ไม่รองรับการเปิดจาก LINE</div>
-      <div style="font-size:15px;color:#f0eeea;margin-bottom:6px;font-weight:500">วิธีเปิดใน Safari</div>
-      <div style="font-size:14px;color:#9ca3af;margin-bottom:24px;line-height:2">
-        1. กดปุ่ม <b style="color:#f0eeea">···</b> มุมขวาบน<br>
-        2. เลือก <b style="color:#f0eeea">"เปิดใน Safari"</b>
-      </div>
-      <button id="copy-btn-ios" onclick="
-        navigator.clipboard.writeText('${url}').then(()=>{
-          document.getElementById('copy-btn-ios').textContent='✓ คัดลอกแล้ว! วางใน Safari';
-          document.getElementById('copy-btn-ios').style.background='#22c55e';
-          document.getElementById('copy-btn-ios').style.color='#000';
-        }).catch(()=>{
-          prompt('คัดลอก URL นี้แล้วเปิดใน Safari:','${url}');
-        })" 
-        style="width:100%;max-width:280px;padding:14px;background:#f0a500;color:#000;border:none;border-radius:10px;font-family:Kanit,sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px">
-        📋 คัดลอก URL ไปเปิดใน Safari
-      </button>
-      <div style="font-size:11px;color:#4b5563;word-break:break-all;max-width:280px;margin-top:4px">${url}</div>`;
-    document.documentElement.appendChild(overlay);
-  }
-})();
+// ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(reg=>reg.unregister());
-  });
-  // ล้าง cache เก่าทั้งหมด
-  if('caches' in window){
-    caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
-  }
+  navigator.serviceWorker.getRegistrations().then(regs=>{regs.forEach(reg=>reg.unregister());});
+  if('caches' in window) caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
 }
 </script>
 </body>
