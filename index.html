@@ -164,6 +164,8 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ===== LOAN TABS ===== */
 .loan-type-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.loan-panel .form-grid{grid-template-columns:1fr!important}
+.loan-panel .form-actions{position:sticky;bottom:0;background:var(--bg2);padding:10px 0 2px;margin-top:6px;z-index:5}
 .lt-tab{padding:7px 12px;border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:13px;color:var(--text2);background:transparent;font-family:'Sarabun',sans-serif}
 .lt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.1)}
 .loan-panel{display:none}.loan-panel.active{display:block}
@@ -391,9 +393,7 @@ tbody tr:last-child td{border-bottom:none}
           <div class="form-grid form-2">
             <div class="field"><label>วันที่กู้</label><input type="date" id="ln-once-date" oninput="checkReturnDate()"></div>
             <div class="field"><label>สมาชิก</label><select id="ln-once-member"></select></div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
-            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500)</label>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500 บาท)</label>
               <input type="number" id="ln-once-amount" min="0" max="1500" placeholder="0" inputmode="decimal" oninput="checkMax(this,1500,'ln-once-warn')">
               <div class="field-note warn" id="ln-once-warn" style="display:none">⚠ กรอกได้ไม่เกิน 1,500 บาท</div>
             </div>
@@ -401,72 +401,62 @@ tbody tr:last-child td{border-bottom:none}
               <input type="date" id="ln-once-return" oninput="checkReturnDate()">
               <div class="field-note warn" id="ln-once-return-warn" style="display:none">⚠ เกิน 15 วัน</div>
             </div>
+            <div class="field"><label>เหตุผล</label><input type="text" id="ln-once-reason" placeholder="ระบุเหตุผล"></div>
           </div>
-          <div class="form-grid" style="margin-top:10px"><div class="field"><label>เหตุผล</label><input type="text" id="ln-once-reason" placeholder="ระบุเหตุผล"></div></div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('once')">+ ยื่นคำร้อง</button></div>
+          <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('once')">+ ยื่นคำร้อง</button></div>
         </div>
         <div class="loan-panel" id="panel-tip-all">
-          <div style="font-size:13px;color:var(--blue);margin-bottom:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,200 บาท/ครั้ง · หักทิปทั้งหมด</div>
-          <div class="form-grid form-2">
+          <div style="font-size:12px;color:var(--blue);margin-bottom:10px;padding:8px 12px;background:var(--blue-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,200 บาท/ครั้ง · หักทิปทั้งหมด</div>
+          <div class="form-grid">
             <div class="field"><label>วันที่กู้</label><input type="date" id="ln-tipall-date"></div>
             <div class="field"><label>สมาชิก</label><select id="ln-tipall-member"></select></div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
-            <div class="field"><label>จำนวนเงิน (สูงสุด 1,200)</label>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,200 บาท)</label>
               <input type="number" id="ln-tipall-amount" min="0" max="1200" placeholder="0" inputmode="decimal" oninput="checkMax(this,1200,'ln-tipall-warn')">
               <div class="field-note warn" id="ln-tipall-warn" style="display:none">⚠ กรอกได้ไม่เกิน 1,200 บาท</div>
             </div>
             <div class="field"><label>เหตุผล</label><input type="text" id="ln-tipall-reason" placeholder="ระบุเหตุผล"></div>
           </div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('tip-all')">+ ยื่นคำร้อง</button></div>
+          <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('tip-all')">+ ยื่นคำร้อง</button></div>
         </div>
         <div class="loan-panel" id="panel-tip-part">
-          <div style="font-size:13px;color:var(--amber);margin-bottom:12px;padding:10px 12px;background:var(--amber-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,000 บาท/ครั้ง · หักทิปบางส่วน</div>
-          <div class="form-grid form-2">
+          <div style="font-size:12px;color:var(--amber);margin-bottom:10px;padding:8px 12px;background:var(--amber-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,000 บาท/ครั้ง · หักทิปบางส่วน</div>
+          <div class="form-grid">
             <div class="field"><label>วันที่กู้</label><input type="date" id="ln-tippart-date"></div>
             <div class="field"><label>สมาชิก</label><select id="ln-tippart-member"></select></div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
-            <div class="field"><label>จำนวนเงิน (สูงสุด 1,000)</label>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,000 บาท)</label>
               <input type="number" id="ln-tippart-amount" min="0" max="1000" placeholder="0" inputmode="decimal" oninput="checkMax(this,1000,'ln-tippart-warn')">
               <div class="field-note warn" id="ln-tippart-warn" style="display:none">⚠ กรอกได้ไม่เกิน 1,000 บาท</div>
             </div>
             <div class="field"><label>เหตุผล</label><input type="text" id="ln-tippart-reason" placeholder="ระบุเหตุผล"></div>
           </div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('tip-part')">+ ยื่นคำร้อง</button></div>
+          <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('tip-part')">+ ยื่นคำร้อง</button></div>
         </div>
         <div class="loan-panel" id="panel-daily">
-          <div style="font-size:13px;color:var(--green);margin-bottom:12px;padding:10px 12px;background:var(--green-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,500 บาท/ครั้ง · หักรายวัน</div>
-          <div class="form-grid form-2">
+          <div style="font-size:12px;color:var(--green);margin-bottom:10px;padding:8px 12px;background:var(--green-bg);border-radius:var(--radius-sm)">ℹ กู้ได้ไม่เกิน 1,500 บาท/ครั้ง · หักรายวัน</div>
+          <div class="form-grid">
             <div class="field"><label>วันที่กู้</label><input type="date" id="ln-daily-date"></div>
             <div class="field"><label>สมาชิก</label><select id="ln-daily-member"></select></div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
-            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500)</label>
+            <div class="field"><label>จำนวนเงิน (สูงสุด 1,500 บาท)</label>
               <input type="number" id="ln-daily-amount" min="0" max="1500" placeholder="0" inputmode="decimal" oninput="checkMax(this,1500,'ln-daily-warn')">
               <div class="field-note warn" id="ln-daily-warn" style="display:none">⚠ กรอกได้ไม่เกิน 1,500 บาท</div>
             </div>
             <div class="field"><label>หักวันละ (บาท)</label>
               <select id="ln-daily-rate"><option value="100">100</option><option value="200">200</option><option value="300">300</option><option value="400">400</option><option value="500">500</option></select>
             </div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
             <div class="field"><label>วันที่เริ่มคืน</label><input type="date" id="ln-daily-start"></div>
             <div class="field"><label>เหตุผล</label><input type="text" id="ln-daily-reason" placeholder="ระบุเหตุผล"></div>
           </div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('daily')">+ ยื่นคำร้อง</button></div>
+          <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('daily')">+ ยื่นคำร้อง</button></div>
         </div>
         <div class="loan-panel" id="panel-fee">
-          <div style="font-size:13px;color:var(--accent);margin-bottom:12px;padding:10px 12px;background:rgba(240,165,0,.1);border-radius:var(--radius-sm)">ℹ เบิกตามค่าตัวจริง · ร้านโอนค่าตัวเข้ากองทุนก่อน</div>
-          <div class="form-grid form-2">
+          <div style="font-size:12px;color:var(--accent);margin-bottom:10px;padding:8px 12px;background:rgba(240,165,0,.1);border-radius:var(--radius-sm)">ℹ เบิกตามค่าตัวจริง · ร้านโอนค่าตัวเข้ากองทุนก่อน</div>
+          <div class="form-grid">
             <div class="field"><label>วันที่กู้</label><input type="date" id="ln-fee-date"></div>
             <div class="field"><label>สมาชิก</label><select id="ln-fee-member"></select></div>
-          </div>
-          <div class="form-grid form-2" style="margin-top:10px">
             <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="ln-fee-amount" min="0" placeholder="0" inputmode="decimal"></div>
             <div class="field"><label>รายละเอียด</label><input type="text" id="ln-fee-reason" placeholder="ชื่อร้าน/งาน"></div>
           </div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addLoan('fee')">+ ยื่นคำร้อง</button></div>
+          <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('fee')">+ ยื่นคำร้อง</button></div>
         </div>
       </div>
 
@@ -605,7 +595,24 @@ const ALL_PAGES=[
 function mName(id){const m=MEMBERS.find(x=>x.id===id);return m?m.name:'-';}
 function mInit(id){const m=MEMBERS.find(x=>x.id===id);return m?m.initials:'??';}
 function fmt(n){return Number(n||0).toLocaleString('th-TH');}
-function fmtDate(d){if(!d)return'-';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});}
+function fmtDate(d){
+  if(!d||d===''||d==='-')return'-';
+  // รองรับหลายรูปแบบ: YYYY-MM-DD, DD/MM/YYYY, timestamp number
+  let dt;
+  if(typeof d==='number'){
+    // Google Sheets date serial number
+    dt=new Date((d-25569)*86400*1000);
+  }else{
+    const s=String(d).trim();
+    // YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)) dt=new Date(s+'T00:00:00');
+    // DD/MM/YYYY
+    else if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)){const p=s.split('/');dt=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}T00:00:00`);}
+    else dt=new Date(s);
+  }
+  if(isNaN(dt?.getTime()))return String(d);
+  return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+}
 function today(){return new Date().toISOString().split('T')[0];}
 function isAdmin(){return SESSION.role==='superadmin'||SESSION.role==='admin';}
 function isSuperAdmin(){return SESSION.role==='superadmin';}
