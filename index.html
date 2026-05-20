@@ -423,7 +423,10 @@ tbody tr:last-child td{border-bottom:none}
         </div>
         <div class="form-grid">
           <div class="field"><label>วันที่รับเงิน</label><input type="date" id="lr-date"></div>
-          <div class="field"><label>สมาชิกที่คืนเงิน</label><select id="lr-member"></select></div>
+          <div class="field"><label>สมาชิกที่คืนเงิน</label>
+          <select id="lr-member" onchange="showOutstanding()"></select>
+          <div class="field-note" id="lr-outstanding" style="color:var(--amber)"></div>
+        </div>
           <div class="field"><label>จำนวนที่รับคืน (บาท)</label><input type="number" id="lr-amount" min="0" placeholder="0" inputmode="decimal"></div>
           <div class="field"><label>หมายเหตุ</label><input type="text" id="lr-note" placeholder="เช่น หักทิปงวดที่ 1, คืนเต็มจำนวน"></div>
         </div>
@@ -827,12 +830,19 @@ function go(name){
   renders[name]&&renders[name]();
 }
 
+const INTEREST_RATE=0.02;
+function calcInterest(amount){return Math.ceil(+amount*INTEREST_RATE);}
+function calcTotal(amount){return +amount+calcInterest(+amount);}
+
 // ===== BALANCE =====
 function calcBalance(){
   let income=0,expense=0,payout=0,loanOut=0,repaid=0;
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
-  DB.loans.filter(l=>l.status==='approved').forEach(l=>loanOut+=+l.amount);
+  // ยอดกู้ที่อนุมัติ = เงินต้น + ดอกเบี้ย (totalReturn)
+  DB.loans.filter(l=>l.status==='approved').forEach(l=>{
+    loanOut+=+(l.totalReturn||calcTotal(+l.amount));
+  });
   DB.repayments.forEach(r=>repaid+=+r.amount);
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
@@ -866,7 +876,7 @@ const renders={
     const all=[
       ...DB.transactions.map(t=>({date:t.date,label:t.category||'รายการ',type:t.type,amount:t.amount})),
       ...DB.payouts.map(p=>({date:p.date,label:'จ่าย: '+mName(p.member),type:'payout',amount:p.amount})),
-      ...DB.loans.filter(l=>l.status==='approved').map(l=>({date:l.date,label:'กู้: '+mName(l.member),type:'loan',amount:l.amount})),
+      ...DB.loans.filter(l=>l.status==='approved').map(l=>({date:l.date,label:'กู้: '+mName(l.member),type:'loan',amount:l.totalReturn||calcTotal(+l.amount)})),
     ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
     const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
     const labels={income:'รายรับ',expense:'รายจ่าย',payout:'จ่ายสมาชิก',loan:'กู้เงิน'};
@@ -987,22 +997,23 @@ const renders={
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--amber)"></div>
       <div><div class="ri-label">${mName(l.member)} · <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:10px">${TYPE_LABEL[l.loanType]||''}</span></div>
       <div class="ri-sub">${fmtDate(l.date)} · ${l.reason||''}</div></div></div>
-      <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.amount)}</div>
+      <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</div>
       <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // members
     const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
     document.getElementById('report-members').innerHTML=MEMBERS.map(m=>{
       const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
-      const lnT=DB.loans.filter(l=>l.member===m.id&&l.status==='approved').reduce((s,l)=>s+(+l.amount),0);
-      const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+l.amount),0);
+      // ยอดกู้ที่ต้องคืน = เงินต้น + ดอกเบี้ย
+      const lnT=DB.loans.filter(l=>l.member===m.id&&l.status==='approved').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
+      const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const repaid=rMap[m.id]||0;const out=lnT-repaid;
       return`<div class="member-card">
         <div class="m-avatar">${m.initials}</div>
         <div class="m-name">${m.name}</div>
         <div class="m-divider"></div>
         <div class="m-stat"><span>รับเงินรวม</span><span>฿${fmt(po)}</span></div>
-        <div class="m-stat"><span>กู้อนุมัติ</span><span>฿${fmt(lnT)}</span></div>
+        <div class="m-stat"><span>ยอดต้องคืน</span><span>฿${fmt(lnT)}</span></div>
         <div class="m-stat"><span>คืนแล้ว</span><span>฿${fmt(repaid)}</span></div>
         <div class="m-stat"><span>คงค้าง</span><span class="${out>0?'neg':''}">฿${fmt(out)}</span></div>
         ${lnP>0?`<div class="m-stat"><span style="color:var(--amber)">รอพิจารณา</span><span style="color:var(--amber)">฿${fmt(lnP)}</span></div>`:''}
@@ -1043,6 +1054,17 @@ function addPayout(){
   document.getElementById('po-amount').value='';document.getElementById('po-note').value='';
   toast('บันทึกการจ่ายเงินสำเร็จ');
 }
+function showOutstanding(){
+  const mid=document.getElementById('lr-member').value;
+  const el=document.getElementById('lr-outstanding');
+  if(!el||!mid)return;
+  const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
+  const total=DB.loans.filter(l=>l.member===mid&&l.status==='approved').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
+  const repaid=rMap[mid]||0;
+  const out=total-repaid;
+  el.textContent=out>0?`ยอดคงค้าง (รวมดอก): ฿${fmt(out)}`:'ไม่มียอดค้างชำระ';
+  el.style.color=out>0?'var(--amber)':'var(--green)';
+}
 function addRepay(){
   const date=document.getElementById('lr-date').value||today();
   const member=document.getElementById('lr-member').value;
@@ -1072,11 +1094,6 @@ function checkReturnDate(){
   const w=document.getElementById('ln-once-return-warn');
   if(d1&&d2&&w)w.style.display=((new Date(d2)-new Date(d1))/864e5)>15?'block':'none';
 }
-const INTEREST_RATE=0.02; // 2%
-
-function calcInterest(amount){ return Math.ceil(amount*INTEREST_RATE); }
-function calcTotal(amount){ return amount+calcInterest(amount); }
-
 function addLoan(type){
   const pfx={once:'ln-once','tip-all':'ln-tipall','tip-part':'ln-tippart',daily:'ln-daily',fee:'ln-fee'}[type];
   const date=document.getElementById(pfx+'-date').value||today();
