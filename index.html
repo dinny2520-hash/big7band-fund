@@ -777,6 +777,7 @@ function startApp(){
   document.getElementById('sb-username').textContent=SESSION.name;
   document.getElementById('sb-role').textContent=SESSION.role==='superadmin'?'Super Admin':SESSION.role==='admin'?'Admin':'สมาชิก';
   buildNav();
+  populateSelects(); // เรียกหลัง SESSION set แล้ว เพื่อกำหนด loan member ถูกต้อง
   initDates();
   applyRoleUI();
   go('dashboard');
@@ -1250,9 +1251,29 @@ function populateSelects(){
   const opts=MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   const mlist=document.getElementById('login-member-name');
   if(mlist)mlist.innerHTML='<option value="">เลือกชื่อสมาชิก</option>'+opts;
-  ['po-member','lr-member','ln-once-member','ln-tipall-member','ln-tippart-member','ln-daily-member','ln-fee-member'].forEach(id=>{
+  // admin selects — เลือกได้ทุกคน
+  ['po-member','lr-member'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML=opts;
   });
+  // loan member selects — ถ้าเป็นสมาชิกให้แสดงแค่ชื่อตัวเอง ถ้าเป็นผู้ดูแลเลือกได้ทุกคน
+  const loanMemberIds=['ln-once-member','ln-tipall-member','ln-tippart-member','ln-daily-member','ln-fee-member'];
+  if(isAdmin()){
+    loanMemberIds.forEach(id=>{
+      const el=document.getElementById(id);if(el)el.innerHTML=opts;
+    });
+  } else {
+    // สมาชิก — แสดงชื่อตัวเองอย่างเดียว เปลี่ยนไม่ได้
+    const m=MEMBERS.find(x=>x.id===SESSION.memberId);
+    const selfOpt=m?`<option value="${m.id}">${m.name}</option>`:'';
+    loanMemberIds.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        el.innerHTML=selfOpt;
+        el.disabled=true;
+        el.style.opacity='0.7';
+      }
+    });
+  }
 }
 function initDates(){
   ['tx-date','po-date','ln-once-date','ln-once-return','ln-tipall-date','ln-tippart-date','ln-daily-date','ln-daily-start','ln-fee-date','lr-date'].forEach(id=>{
