@@ -887,7 +887,9 @@ const renders={
       if(l.loanType==='daily'&&l.dailyRate)extra=`<div class="ac-meta-item">📊 วันละ: <span>฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</span></div>`;
       return`<div class="approval-card">
         <div class="ac-member"><div style="width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1.5px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0">${mInit(l.member)}</div>${mName(l.member)}</div>
-        <div class="ac-amount">฿${fmt(l.amount)} บาท</div>
+        <div class="ac-amount">฿${fmt(l.amount)} บาท
+          <span style="font-size:13px;color:var(--text2);font-weight:400;margin-left:8px">+ ดอกเบี้ย 2% = <span style="color:var(--green)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</span></span>
+        </div>
         <div class="ac-meta">
           <div class="ac-meta-item">📅 <span>${fmtDate(l.date)}</span></div>
           <div class="ac-meta-item">🏷 <span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||''}</span></div>
@@ -940,7 +942,7 @@ const renders={
         <td data-label="เหตุผล" style="color:var(--text3)">${l.reason||'-'}</td>
         <td data-label="สถานะ"><span class="badge badge-${l.status}">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></td>
         <td data-label="ผู้อนุมัติ" style="font-size:12px;color:var(--text3)">${l.approvedBy||'-'}</td>
-        <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--amber)">฿${fmt(l.amount)}</td>
+        <td data-label="ยอดต้องคืน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}<br><span style="font-size:11px;color:var(--text3)">(ต้น ฿${fmt(l.amount)} + ดบ. ฿${fmt(l.interest||calcInterest(+l.amount))})</span></td>
         <td class="no-label">
           <button class="btn-del" onclick="openShareModal(${l.id})">📤</button>
           ${admin?`<button class="btn-del" onclick="del('loans',${l.id})">🗑</button>`:''}
@@ -1070,6 +1072,11 @@ function checkReturnDate(){
   const w=document.getElementById('ln-once-return-warn');
   if(d1&&d2&&w)w.style.display=((new Date(d2)-new Date(d1))/864e5)>15?'block':'none';
 }
+const INTEREST_RATE=0.02; // 2%
+
+function calcInterest(amount){ return Math.ceil(amount*INTEREST_RATE); }
+function calcTotal(amount){ return amount+calcInterest(amount); }
+
 function addLoan(type){
   const pfx={once:'ln-once','tip-all':'ln-tipall','tip-part':'ln-tippart',daily:'ln-daily',fee:'ln-fee'}[type];
   const date=document.getElementById(pfx+'-date').value||today();
@@ -1083,7 +1090,12 @@ function addLoan(type){
     const ret=document.getElementById('ln-once-return').value;
     if(ret&&((new Date(ret)-new Date(date))/864e5)>15){alert('วันคืนต้องไม่เกิน 15 วัน');return;}
   }
-  const loan={id:Date.now(),date,member,amount,reason,loanType:type,status:'pending',approvedBy:'',returnDate:'',dailyRate:'',startDate:''};
+  const interest=calcInterest(amount);
+  const totalReturn=calcTotal(amount);
+  // แจ้งดอกเบี้ยก่อน confirm
+  const ok=confirm(`ยืนยันการกู้เงิน\n\nเงินต้น: ฿${fmt(amount)}\nดอกเบี้ย 2%: ฿${fmt(interest)}\nยอดที่ต้องคืน: ฿${fmt(totalReturn)}`);
+  if(!ok)return;
+  const loan={id:Date.now(),date,member,amount,interest,totalReturn,reason,loanType:type,status:'pending',approvedBy:'',returnDate:'',dailyRate:'',startDate:''};
   if(type==='once')loan.returnDate=document.getElementById('ln-once-return').value||'';
   if(type==='daily'){loan.dailyRate=+document.getElementById('ln-daily-rate').value;loan.startDate=document.getElementById('ln-daily-start').value||'';}
   DB.loans.push(loan);renders.loans();updateSidebar();saveRow('loans',loan);
@@ -1113,7 +1125,9 @@ function openApproveModal(id,action){
     <div class="modal-info-row"><span class="k">ประเภท</span><span class="v">${TYPE_LABEL[l.loanType]||'-'}</span></div>
     <div class="modal-info-row"><span class="k">เหตุผล</span><span class="v">${l.reason||'-'}</span></div>
     ${extra}
-    <div class="modal-info-row"><span class="k">จำนวน</span><span class="v big">฿${fmt(l.amount)} บาท</span></div>`;
+    <div class="modal-info-row"><span class="k">เงินต้น</span><span class="v big">฿${fmt(l.amount)} บาท</span></div>
+    <div class="modal-info-row"><span class="k">ดอกเบี้ย 2%</span><span class="v" style="color:var(--amber)">฿${fmt(l.interest||calcInterest(+l.amount))} บาท</span></div>
+    <div class="modal-info-row"><span class="k">ยอดที่ต้องคืน</span><span class="v" style="color:var(--green);font-family:'Kanit',sans-serif;font-size:18px">฿${fmt(l.totalReturn||calcTotal(+l.amount))} บาท</span></div>`;
   document.getElementById('approve-pin').value='';
   document.getElementById('approve-pin-err').textContent='';
   document.getElementById('approve-modal').classList.add('show');
@@ -1212,7 +1226,10 @@ function copyText(){
 function buildShareText(l){
   const lines=['📋 ใบคำร้องกู้เงิน — Big Seven Band','━━━━━━━━━━━━━━━━',
     `👤 สมาชิก: ${mName(l.member)}`,`📅 วันที่กู้: ${fmtDate(l.date)}`,
-    `🏷 ประเภท: ${TYPE_LABEL[l.loanType]||'-'}`,`💰 จำนวน: ฿${fmt(l.amount)} บาท`,
+    `🏷 ประเภท: ${TYPE_LABEL[l.loanType]||'-'}`,
+    `💰 เงินต้น: ฿${fmt(l.amount)} บาท`,
+    `📊 ดอกเบี้ย 2%: ฿${fmt(l.interest||calcInterest(+l.amount))} บาท`,
+    `💵 ยอดที่ต้องคืน: ฿${fmt(l.totalReturn||calcTotal(+l.amount))} บาท`,
     `📝 เหตุผล: ${l.reason||'-'}`,
     `📌 สถานะ: ${l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'}`,
   ];
@@ -1231,8 +1248,13 @@ function drawCanvas(l){
   ctx.fillStyle='#f0eeea';ctx.font='bold 15px sans-serif';ctx.fillText('ใบคำร้องกู้เงิน — Big Seven Band',18,30);
   ctx.fillStyle='#6b7280';ctx.font='12px sans-serif';ctx.fillText('วันที่ออก: '+fmtDate(today()),18,48);
   ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(18,58);ctx.lineTo(W-18,58);ctx.stroke();
+  const interest=l.interest||calcInterest(+l.amount);
+  const totalReturn=l.totalReturn||calcTotal(+l.amount);
   const rows=[['สมาชิก',mName(l.member)],['วันที่กู้',fmtDate(l.date)],['ประเภท',TYPE_LABEL[l.loanType]||'-'],
-    ['จำนวนเงิน','฿'+fmt(l.amount)+' บาท'],['เหตุผล',l.reason||'-'],
+    ['เงินต้น','฿'+fmt(l.amount)+' บาท'],
+    ['ดอกเบี้ย 2%','฿'+fmt(interest)+' บาท'],
+    ['ยอดที่ต้องคืน','฿'+fmt(totalReturn)+' บาท'],
+    ['เหตุผล',l.reason||'-'],
     ['สถานะ',l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ']];
   if(l.loanType==='once'&&l.returnDate)rows.push(['กำหนดคืน',fmtDate(l.returnDate)]);
   if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDate(l.startDate)]);
@@ -1240,8 +1262,8 @@ function drawCanvas(l){
   let y=76;
   rows.forEach(([k,v])=>{
     ctx.fillStyle='#9ca3af';ctx.font='11px sans-serif';ctx.fillText(k,18,y);
-    ctx.fillStyle=k==='จำนวนเงิน'?'#f0a500':k==='สถานะ'&&l.status==='approved'?'#22c55e':'#f0eeea';
-    ctx.font=k==='จำนวนเงิน'?'bold 13px sans-serif':'12px sans-serif';
+    ctx.fillStyle=k==='ยอดที่ต้องคืน'?'#22c55e':k==='ดอกเบี้ย 2%'?'#f0a500':k==='สถานะ'&&l.status==='approved'?'#22c55e':'#f0eeea';
+    ctx.font=(k==='ยอดที่ต้องคืน'||k==='เงินต้น')?'bold 13px sans-serif':'12px sans-serif';
     ctx.fillText(String(v).substring(0,28),148,y);y+=24;
   });
   ctx.fillStyle='rgba(255,255,255,0.04)';roundRect(ctx,18,H-30,W-36,22,6);ctx.fill();
