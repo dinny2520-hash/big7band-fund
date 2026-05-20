@@ -407,6 +407,22 @@ tbody tr:last-child td{border-bottom:none}
     <!-- LOANS -->
     <div id="page-loans" class="page">
       <div class="page-header"><div class="page-title">การกู้เงิน</div><div class="page-sub">ยื่นคำร้อง และดูประวัติ</div></div>
+
+      <!-- รับเงินคืน — แสดงเฉพาะผู้ดูแล อยู่บนสุด -->
+      <div class="card" id="repay-form-wrap">
+        <div class="card-title"><span class="card-dot"></span>📥 รับเงินคืนจากสมาชิก <span style="font-size:12px;color:var(--text3)">(เฉพาะผู้ดูแล)</span></div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:var(--bg3);border-radius:var(--radius-sm)">
+          เมื่อสมาชิกชำระเงินคืน — กรอกจำนวนที่รับมาจริง แล้วกด "บันทึก"
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>วันที่รับเงิน</label><input type="date" id="lr-date"></div>
+          <div class="field"><label>สมาชิกที่คืนเงิน</label><select id="lr-member"></select></div>
+          <div class="field"><label>จำนวนที่รับคืน (บาท)</label><input type="number" id="lr-amount" min="0" placeholder="0" inputmode="decimal"></div>
+          <div class="field"><label>หมายเหตุ</label><input type="text" id="lr-note" placeholder="เช่น หักทิปงวดที่ 1, คืนเต็มจำนวน"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addRepay()">📥 บันทึกรับเงินคืน</button></div>
+      </div>
+
       <div class="card">
         <div class="card-title"><span class="card-dot"></span>ยื่นเรื่องกู้เงิน</div>
         <div class="loan-type-tabs">
@@ -486,19 +502,6 @@ tbody tr:last-child td{border-bottom:none}
           </div>
           <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addLoan('fee')">+ ยื่นคำร้อง</button></div>
         </div>
-      </div>
-
-      <div class="card" id="repay-form-wrap">
-        <div class="card-title"><span class="card-dot"></span>บันทึกการคืนเงิน <span style="font-size:12px;color:var(--text3)">(เฉพาะผู้ดูแล)</span></div>
-        <div class="form-grid form-2">
-          <div class="field"><label>วันที่คืน</label><input type="date" id="lr-date"></div>
-          <div class="field"><label>สมาชิก</label><select id="lr-member"></select></div>
-        </div>
-        <div class="form-grid form-2" style="margin-top:10px">
-          <div class="field"><label>จำนวนที่คืน (บาท)</label><input type="number" id="lr-amount" min="0" placeholder="0" inputmode="decimal"></div>
-          <div class="field"><label>หมายเหตุ</label><input type="text" id="lr-note" placeholder="งวดที่, เดือน..."></div>
-        </div>
-        <div class="form-actions"><button class="btn btn-primary" onclick="addRepay()">+ บันทึกคืนเงิน</button></div>
       </div>
 
       <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการกู้</div>
