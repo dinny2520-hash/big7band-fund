@@ -727,34 +727,42 @@ function setLoginMode(m){
 function doLogin(){
   const errEl=document.getElementById('login-err');
   errEl.textContent='';
-  if(loginMode==='admin'){
-    const u=document.getElementById('login-user').value;
-    const p=document.getElementById('login-pass').value;
-    if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return;}
-    if(u==='ชิษณุพงศ์'&&p===DB.passwords.admin1){
-      SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};startApp();return;
-    }
-    if(u==='กฤษติญา'&&p===DB.passwords.admin2){
-      SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};startApp();return;
-    }
-    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
-  }else{
-    const mid=document.getElementById('login-member-name').value;
-    const p=document.getElementById('login-member-pass').value;
-    if(!mid){errEl.textContent='กรุณาเลือกชื่อสมาชิก';return;}
-    if(p===DB.passwords.member){
-      const m=MEMBERS.find(x=>x.id===mid);
-      SESSION={role:'member',name:m.name,memberId:mid};startApp();return;
-    }
-    errEl.textContent='กำลังตรวจสอบ...';
-    apiCall({action:'getAll'}).then(d=>{
-      if(d.passwords)DB.passwords=d.passwords;
+  const loginBtn=document.querySelector('.login-btn');
+
+  async function tryLogin(){
+    loginBtn.disabled=true;
+    loginBtn.textContent='กำลังตรวจสอบ...';
+    // โหลดรหัสผ่านล่าสุดจาก Sheet ก่อนทุกครั้ง
+    try{
+      const d=await apiCall({action:'getAll'});
+      if(d.passwords) DB.passwords=d.passwords;
+    }catch(e){}
+    loginBtn.disabled=false;
+    loginBtn.textContent='เข้าสู่ระบบ';
+
+    if(loginMode==='admin'){
+      const u=document.getElementById('login-user').value;
+      const p=document.getElementById('login-pass').value;
+      if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return;}
+      if(u==='ชิษณุพงศ์'&&p===DB.passwords.admin1){
+        SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};startApp();return;
+      }
+      if(u==='กฤษติญา'&&p===DB.passwords.admin2){
+        SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};startApp();return;
+      }
+      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+    }else{
+      const mid=document.getElementById('login-member-name').value;
+      const p=document.getElementById('login-member-pass').value;
+      if(!mid){errEl.textContent='กรุณาเลือกชื่อสมาชิก';return;}
       if(p===DB.passwords.member){
         const m=MEMBERS.find(x=>x.id===mid);
-        SESSION={role:'member',name:m.name,memberId:mid};startApp();
-      }else{errEl.textContent='รหัสผ่านไม่ถูกต้อง';}
-    }).catch(()=>{errEl.textContent='รหัสผ่านไม่ถูกต้อง';});
+        SESSION={role:'member',name:m.name,memberId:mid};startApp();return;
+      }
+      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+    }
   }
+  tryLogin();
 }
 function doLogout(){
   SESSION={role:'',name:'',memberId:''};
