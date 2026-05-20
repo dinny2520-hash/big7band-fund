@@ -290,7 +290,11 @@ tbody tr:last-child td{border-bottom:none}
       <button class="login-tab" onclick="setLoginMode('member')">สมาชิก</button>
     </div>
     <div id="login-admin-fields">
-      <input class="login-input" type="text" id="login-user" placeholder="ชื่อผู้ใช้" autocomplete="username">
+      <select class="member-select" id="login-user">
+        <option value="">เลือกผู้ดูแล</option>
+        <option value="ชิษณุพงศ์">ชิษณุพงศ์ สาริกา</option>
+        <option value="กฤษติญา">กฤษติญา เทพธานี</option>
+      </select>
       <input class="login-input" type="password" id="login-pass" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div id="login-member-fields" style="display:none">
@@ -721,15 +725,16 @@ function doLogin(){
   const errEl=document.getElementById('login-err');
   errEl.textContent='';
   if(loginMode==='admin'){
-    const u=document.getElementById('login-user').value.trim();
+    const u=document.getElementById('login-user').value;
     const p=document.getElementById('login-pass').value;
-    if((u==='ชิษณุพงศ์'||u==='chitsanupong')&&p===DB.passwords.admin1){
+    if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return;}
+    if(u==='ชิษณุพงศ์'&&p===DB.passwords.admin1){
       SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};startApp();return;
     }
-    if((u==='กฤษติญา'||u==='krittiya')&&p===DB.passwords.admin2){
+    if(u==='กฤษติญา'&&p===DB.passwords.admin2){
       SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};startApp();return;
     }
-    errEl.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
   }else{
     const mid=document.getElementById('login-member-name').value;
     const p=document.getElementById('login-member-pass').value;
