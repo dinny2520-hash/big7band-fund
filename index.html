@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>กองทุนวง Big Seven Band</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .login-err{font-size:13px;color:var(--red);margin-top:8px;min-height:18px}
 
 /* ===== LAYOUT desktop ===== */
-.layout{display:flex;min-height:100vh}
+.layout{display:flex;min-height:100vh;width:100%}
 .sidebar{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
 .brand{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
 .brand-logo{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:17px;color:#000;margin-bottom:8px}
@@ -63,7 +63,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .sb-label{font-size:11px;color:var(--text3);margin-bottom:3px}
 .sb-val{font-family:'Kanit',sans-serif;font-size:18px;font-weight:600;color:var(--green)}
 .sb-val.neg{color:var(--red)}
-.main{margin-left:240px;flex:1;padding:24px 28px;min-height:100vh}
+.main{margin-left:240px;flex:1;padding:24px 28px;min-height:100vh;min-width:0;overflow-x:hidden}
 
 /* ===== MOBILE bottom nav ===== */
 .mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:100;align-items:center;padding:0 16px;gap:10px}
@@ -234,16 +234,29 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ===== MOBILE RESPONSIVE ===== */
 @media(max-width:768px){
-  .sidebar{display:none}
+  html,body{width:100%;max-width:100vw;overflow-x:hidden}
+  .layout{display:block;width:100%}
+  .sidebar{display:none!important}
   .mobile-topbar{display:flex}
   .bottom-nav{display:flex}
-  .main{margin-left:0;padding:70px 16px calc(var(--nav-h) + 16px)}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .member-grid{grid-template-columns:repeat(2,1fr)}
-  .form-2,.form-3,.form-4{grid-template-columns:1fr}
+  .main{
+    margin-left:0!important;
+    width:100%!important;
+    max-width:100vw;
+    padding:60px 14px calc(var(--nav-h) + 14px);
+    overflow-x:hidden;
+  }
+  .page{width:100%;max-width:100%}
+  .stats{grid-template-columns:1fr 1fr}
+  .member-grid{grid-template-columns:1fr 1fr}
+  .form-2,.form-3,.form-4{grid-template-columns:1fr!important}
   .modal-overlay{align-items:flex-end}
-  .modal-box{max-width:100%}
-  .toast{bottom:calc(var(--nav-h) + 12px)}
+  .modal-box{max-width:100%;border-radius:20px 20px 0 0}
+  .toast{bottom:calc(var(--nav-h) + 12px);max-width:90vw;white-space:normal;text-align:center}
+  .card{padding:14px}
+  .page-title{font-size:18px}
+  /* ซ่อนปุ่มลบบนมือถือสมาชิก */
+}
 }
 @media(max-width:480px){
   .stats{grid-template-columns:1fr 1fr}
