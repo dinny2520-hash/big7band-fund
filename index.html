@@ -132,6 +132,17 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 
 /* ===== TABLE ===== */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* mobile: แสดงตารางเป็น card แต่ละแถว */
+@media(max-width:768px){
+  .mob-card-table thead{display:none}
+  .mob-card-table tbody tr{display:block;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;padding:10px 12px;border:1px solid var(--border)}
+  .mob-card-table tbody td{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border:none;font-size:13px}
+  .mob-card-table tbody td::before{content:attr(data-label);color:var(--text3);font-size:11px;font-weight:500;text-transform:uppercase;flex-shrink:0;margin-right:8px}
+  .mob-card-table tbody td:empty,.mob-card-table tbody td.no-label::before{display:none}
+  .mob-card-table tbody .empty-row{display:table-row}
+  .mob-card-table tbody .empty-row td{display:table-cell;text-align:center;padding:20px}
+  .mob-card-table tbody .empty-row td::before{display:none}
+}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{padding:7px 10px;text-align:left;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
 tbody td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -352,7 +363,7 @@ tbody tr:last-child td{border-bottom:none}
         <div class="form-actions"><button class="btn btn-primary" onclick="addTransaction()">+ บันทึก</button></div>
       </div>
       <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติ</div>
-        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div>
+        <div class="table-wrap"><table class="mob-card-table"><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div>
       </div>
     </div>
 
@@ -372,7 +383,7 @@ tbody tr:last-child td{border-bottom:none}
         <div class="form-actions"><button class="btn btn-primary" onclick="addPayout()">+ บันทึก</button></div>
       </div>
       <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติ</div>
-        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>รายละเอียด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="po-list"></tbody></table></div>
+        <div class="table-wrap"><table class="mob-card-table"><thead><tr><th>วันที่</th><th>สมาชิก</th><th>รายละเอียด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="po-list"></tbody></table></div>
       </div>
     </div>
 
@@ -474,10 +485,10 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการกู้</div>
-        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>ประเภท</th><th>เหตุผล</th><th>สถานะ</th><th>ผู้อนุมัติ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="ln-list"></tbody></table></div>
+        <div class="table-wrap"><table class="mob-card-table"><thead><tr><th>วันที่</th><th>สมาชิก</th><th>ประเภท</th><th>เหตุผล</th><th>สถานะ</th><th>ผู้อนุมัติ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="ln-list"></tbody></table></div>
       </div>
       <div class="card"><div class="card-title"><span class="card-dot"></span>ประวัติการคืนเงิน</div>
-        <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สมาชิก</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="lr-list"></tbody></table></div>
+        <div class="table-wrap"><table class="mob-card-table"><thead><tr><th>วันที่</th><th>สมาชิก</th><th>หมายเหตุ</th><th style="text-align:right">จำนวน</th><th></th></tr></thead><tbody id="lr-list"></tbody></table></div>
       </div>
     </div>
 
@@ -597,21 +608,24 @@ function mInit(id){const m=MEMBERS.find(x=>x.id===id);return m?m.initials:'??';}
 function fmt(n){return Number(n||0).toLocaleString('th-TH');}
 function fmtDate(d){
   if(!d||d===''||d==='-')return'-';
-  // รองรับหลายรูปแบบ: YYYY-MM-DD, DD/MM/YYYY, timestamp number
   let dt;
-  if(typeof d==='number'){
-    // Google Sheets date serial number
-    dt=new Date((d-25569)*86400*1000);
-  }else{
-    const s=String(d).trim();
-    // YYYY-MM-DD
-    if(/^\d{4}-\d{2}-\d{2}/.test(s)) dt=new Date(s+'T00:00:00');
-    // DD/MM/YYYY
-    else if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)){const p=s.split('/');dt=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}T00:00:00`);}
-    else dt=new Date(s);
-  }
-  if(isNaN(dt?.getTime()))return String(d);
-  return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+  try{
+    if(typeof d==='number'){
+      dt=new Date((d-25569)*86400*1000);
+    }else{
+      const s=String(d).trim();
+      if(/^\d{4}-\d{2}-\d{2}T/.test(s)) dt=new Date(s.substring(0,10)+'T00:00:00');
+      else if(/^\d{4}-\d{2}-\d{2}$/.test(s)) dt=new Date(s+'T00:00:00');
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){const p=s.split('/');dt=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}T00:00:00`);}
+      else dt=new Date(s);
+    }
+    if(!dt||isNaN(dt.getTime()))return String(d);
+    // วัน/เดือน/ปี แบบไทย เช่น 19/05/2569
+    const day=String(dt.getDate()).padStart(2,'0');
+    const month=String(dt.getMonth()+1).padStart(2,'0');
+    const year=dt.getFullYear()+543;
+    return `${day}/${month}/${year}`;
+  }catch(e){return String(d);}
 }
 function today(){return new Date().toISOString().split('T')[0];}
 function isAdmin(){return SESSION.role==='superadmin'||SESSION.role==='admin';}
@@ -855,49 +869,53 @@ const renders={
   transactions(){
     const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date));
     document.getElementById('tx-list').innerHTML=sorted.length?sorted.map(t=>`<tr>
-      <td>${fmtDate(t.date)}</td>
-      <td><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
-      <td>${t.category||'-'}</td><td style="color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis">${t.note||'-'}</td>
-      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</td>
-      <td><button class="btn-del" onclick="del('transactions',${t.id})">🗑</button></td></tr>`).join('')
+      <td data-label="วันที่">${fmtDate(t.date)}</td>
+      <td data-label="ประเภท"><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td data-label="หมวด">${t.category||'-'}</td>
+      <td data-label="หมายเหตุ" style="color:var(--text3)">${t.note||'-'}</td>
+      <td data-label="จำนวน" style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</td>
+      <td class="no-label">${isAdmin()?`<button class="btn-del" onclick="del('transactions',${t.id})">🗑</button>`:''}</td></tr>`).join('')
       :'<tr class="empty-row"><td colspan="6">ยังไม่มีรายการ</td></tr>';
     updateSidebar();
   },
   payouts(){
     const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date));
     document.getElementById('po-list').innerHTML=sorted.length?sorted.map(p=>`<tr>
-      <td>${fmtDate(p.date)}</td><td>${mName(p.member)}</td>
-      <td style="color:var(--text3)">${p.note||'-'}</td>
-      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--blue)">฿${fmt(p.amount)}</td>
-      <td><button class="btn-del" onclick="del('payouts',${p.id})">🗑</button></td></tr>`).join('')
+      <td data-label="วันที่">${fmtDate(p.date)}</td>
+      <td data-label="สมาชิก">${mName(p.member)}</td>
+      <td data-label="รายละเอียด" style="color:var(--text3)">${p.note||'-'}</td>
+      <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--blue)">฿${fmt(p.amount)}</td>
+      <td class="no-label">${isAdmin()?`<button class="btn-del" onclick="del('payouts',${p.id})">🗑</button>`:''}</td></tr>`).join('')
       :'<tr class="empty-row"><td colspan="5">ยังไม่มีรายการ</td></tr>';
     updateSidebar();
   },
   loans(){
     const admin=isAdmin();
-    const sorted=[...DB.loans].sort((a,b)=>b.date.localeCompare(a.date));
+    const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
       let extra='';
       if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:11px;color:var(--text3)">คืน ${fmtDate(l.returnDate)}</span>`;
       if(l.loanType==='daily'&&l.dailyRate)extra=`<br><span style="font-size:11px;color:var(--text3)">วันละ ${fmt(l.dailyRate)}</span>`;
       return`<tr>
-        <td>${fmtDate(l.date)}</td><td>${mName(l.member)}</td>
-        <td><span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||'-'}</span>${extra}</td>
-        <td style="color:var(--text3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${l.reason||'-'}</td>
-        <td><span class="badge badge-${l.status}">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></td>
-        <td style="font-size:12px;color:var(--text3)">${l.approvedBy||'-'}</td>
-        <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--amber)">฿${fmt(l.amount)}</td>
-        <td style="white-space:nowrap">
+        <td data-label="วันที่">${fmtDate(l.date)}</td>
+        <td data-label="สมาชิก">${mName(l.member)}</td>
+        <td data-label="ประเภท"><span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||'-'}</span>${extra}</td>
+        <td data-label="เหตุผล" style="color:var(--text3)">${l.reason||'-'}</td>
+        <td data-label="สถานะ"><span class="badge badge-${l.status}">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></td>
+        <td data-label="ผู้อนุมัติ" style="font-size:12px;color:var(--text3)">${l.approvedBy||'-'}</td>
+        <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--amber)">฿${fmt(l.amount)}</td>
+        <td class="no-label">
           <button class="btn-del" onclick="openShareModal(${l.id})">📤</button>
           ${admin?`<button class="btn-del" onclick="del('loans',${l.id})">🗑</button>`:''}
         </td></tr>`;
     }).join(''):'<tr class="empty-row"><td colspan="8">ยังไม่มีรายการ</td></tr>';
-    const rsorted=[...DB.repayments].sort((a,b)=>b.date.localeCompare(a.date));
+    const rsorted=[...DB.repayments].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     document.getElementById('lr-list').innerHTML=rsorted.length?rsorted.map(r=>`<tr>
-      <td>${fmtDate(r.date)}</td><td>${mName(r.member)}</td>
-      <td style="color:var(--text3)">${r.note||'-'}</td>
-      <td style="text-align:right;font-family:'Kanit',sans-serif;font-weight:500;color:var(--green)">฿${fmt(r.amount)}</td>
-      <td>${admin?`<button class="btn-del" onclick="del('repayments',${r.id})">🗑</button>`:''}</td></tr>`).join('')
+      <td data-label="วันที่">${fmtDate(r.date)}</td>
+      <td data-label="สมาชิก">${mName(r.member)}</td>
+      <td data-label="หมายเหตุ" style="color:var(--text3)">${r.note||'-'}</td>
+      <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--green)">฿${fmt(r.amount)}</td>
+      <td class="no-label">${admin?`<button class="btn-del" onclick="del('repayments',${r.id})">🗑</button>`:''}</td></tr>`).join('')
       :'<tr class="empty-row"><td colspan="5">ยังไม่มีรายการ</td></tr>';
     updateSidebar();
   },
