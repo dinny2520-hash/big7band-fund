@@ -1354,11 +1354,15 @@ loadDB().then(()=>{
   startAutoRefresh();
 });
 
-// PWA Service Worker
+// ลบ Service Worker เก่าออกเพื่อให้มือถือโหลดไฟล์ใหม่เสมอ
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(reg=>reg.unregister());
   });
+  // ล้าง cache เก่าทั้งหมด
+  if('caches' in window){
+    caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
+  }
 }
 </script>
 </body>
