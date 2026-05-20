@@ -263,26 +263,30 @@ tbody tr:last-child td{border-bottom:none}
 @media(max-width:768px){
   html{font-size:18px!important}
   html,body{width:100%;max-width:100vw;overflow-x:hidden}
-  .layout{display:block;width:100%}
+  .layout{display:block!important;width:100%!important;min-height:100vh}
   .sidebar{display:none!important}
-  .mobile-topbar{display:flex;height:58px}
-  .bottom-nav{display:flex;height:68px}
-  --nav-h:68px;
+  .mobile-topbar{display:flex!important;height:58px}
+  .bottom-nav{display:flex!important;height:68px}
   .main{
+    display:block!important;
     margin-left:0!important;
+    margin-right:0!important;
     width:100%!important;
-    max-width:100vw;
-    padding:66px 16px calc(76px);
-    overflow-x:hidden;
+    max-width:100vw!important;
+    min-width:0!important;
+    padding:66px 16px 84px!important;
+    overflow-x:hidden!important;
+    float:none!important;
   }
-  .page{width:100%;max-width:100%}
-  .stats{grid-template-columns:1fr 1fr}
-  .member-grid{grid-template-columns:1fr 1fr}
+  .page{width:100%!important;max-width:100%!important;display:none}
+  .page.active{display:block!important}
+  .stats{grid-template-columns:1fr 1fr!important}
+  .member-grid{grid-template-columns:1fr 1fr!important}
   .form-2,.form-3,.form-4{grid-template-columns:1fr!important}
   .modal-overlay{align-items:flex-end}
-  .modal-box{max-width:100%;border-radius:20px 20px 0 0}
+  .modal-box{max-width:100%!important;border-radius:20px 20px 0 0}
   .toast{bottom:80px;max-width:90vw;white-space:normal;text-align:center}
-  .card{padding:18px}
+  .card{padding:18px!important}
   .page-title{font-size:24px!important}
   .page-sub{font-size:16px!important}
   .stat-val{font-size:24px!important}
