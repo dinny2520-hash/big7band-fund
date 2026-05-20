@@ -243,11 +243,18 @@ tbody tr:last-child td{border-bottom:none}
 </head>
 <body>
 
+<!-- LOADING OVERLAY -->
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;color:#000">B7</div>
+  <div style="font-family:'Kanit',sans-serif;font-size:16px;color:var(--text)">กำลังโหลด...</div>
+  <div style="width:48px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden"><div id="load-prog" style="width:0%;height:100%;background:var(--accent);transition:width .3s;border-radius:2px"></div></div>
+</div>
+
 <!-- SYNC BAR -->
 <div id="sync-bar"></div>
 
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="login-screen" style="display:none">
   <div class="login-box">
     <div class="login-logo">B7</div>
     <div class="login-title">Big Seven Band</div>
@@ -1097,22 +1104,43 @@ function buildShareBtns(){
 }
 function shareToLine(){
   const text=buildShareText(shareData);
-  const encoded=encodeURIComponent(text);
-  window.open('https://line.me/R/msg/text/?'+encoded,'_blank');
+  // LINE URL scheme: เปิดแอปไลน์โดยตรง ถ้าไม่มีแอปจะเปิดเว็บแทน
+  const lineUrl='https://line.me/R/msg/text/?'+encodeURIComponent(text);
+  const a=document.createElement('a');
+  a.href=lineUrl;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
   toast('เปิดไลน์แล้ว — เลือกแชทที่ต้องการส่ง');
 }
 function saveImg(){
   const canvas=document.getElementById('share-canvas');
   const l=shareData;
   const filename='loan_'+mName(l.member)+'_'+today()+'.png';
-  canvas.toBlob(blob=>{
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download=filename;a.style.display='none';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},1000);
-    toast('บันทึกรูปสำเร็จ');
-  },'image/png');
+  try{
+    canvas.toBlob(blob=>{
+      if(!blob){toast('ไม่สามารถสร้างภาพได้');return;}
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download=filename;
+      a.style.cssText='position:fixed;top:-999px;left:-999px';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },2000);
+      toast('กำลังบันทึกรูป...');
+    },'image/png',1.0);
+  }catch(e){
+    // iOS Safari fallback: เปิดรูปในแท็บใหม่แล้วกดค้างบันทึก
+    const dataURL=canvas.toDataURL('image/png');
+    const w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><head><meta name="viewport" content="width=device-width"><title>บันทึกรูป</title></head><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px">');
+      w.document.write('<img src="'+dataURL+'" style="max-width:100%;border-radius:8px">');
+      w.document.write('<p style="color:#fff;font-family:sans-serif;font-size:14px;text-align:center;padding:0 20px">กดค้างที่รูป → บันทึกรูปภาพ</p>');
+      w.document.write('</body></html>');w.document.close();
+    }
+  }
 }
 function openImgTab(){saveImg();}
 
@@ -1178,9 +1206,28 @@ function initDates(){
   });
 }
 
-// start
+// start - แสดง loading ก่อน แล้วค่อยโหลด Sheet ใน background
 populateSelects();
-loadDB().then(startAutoRefresh);
+// progress animation
+let prog=0;
+const progEl=document.getElementById('load-prog');
+const progTimer=setInterval(()=>{prog=Math.min(prog+10,85);if(progEl)progEl.style.width=prog+'%';},200);
+
+loadDB().then(()=>{
+  clearInterval(progTimer);
+  if(progEl)progEl.style.width='100%';
+  setTimeout(()=>{
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+  },300);
+  startAutoRefresh();
+}).catch(()=>{
+  // ถ้าโหลดไม่ได้ก็ให้เข้าระบบได้เลย (ใช้รหัส default)
+  clearInterval(progTimer);
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  startAutoRefresh();
+});
 </script>
 </body>
 </html>
