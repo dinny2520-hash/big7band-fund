@@ -922,10 +922,11 @@ function calcBalance(){
   let income=0,expense=0,payout=0,loanOut=0,repaid=0;
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
-  // ยอดกู้ที่อนุมัติ = เงินต้น + ดอกเบี้ย (totalReturn)
+  // หักออกจากกองทุนแค่เงินต้นที่จ่ายออกไปจริง (ไม่รวมดอกเบี้ย)
   DB.loans.filter(l=>l.status==='approved').forEach(l=>{
-    loanOut+=+(l.totalReturn||calcTotal(+l.amount));
+    loanOut+=+l.amount;
   });
+  // รับคืนรวมเงินต้น + ดอกเบี้ย
   DB.repayments.forEach(r=>repaid+=+r.amount);
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
@@ -952,7 +953,7 @@ const renders={
       {l:'ยอดคงเหลือ',v:'฿'+fmt(balance),c:balance>=0?'green':'red',i:'💰'},
       {l:'รายรับรวม',v:'฿'+fmt(income),c:'green',i:'📈'},
       {l:'รายจ่ายรวม',v:'฿'+fmt(expense+payout),c:'red',i:'📉'},
-      {l:'กู้คงค้าง',v:'฿'+fmt(Math.max(0,loanOut-repaid)),c:'amber',i:'📄'},
+      {l:'กู้คงค้าง (รวมดอก)',v:'฿'+fmt(Math.max(0,(function(){let t=0;DB.loans.filter(l=>l.status==='approved').forEach(l=>{t+=+(l.totalReturn||calcTotal(+l.amount))});return t-repaid})()),c:'amber',i:'📄'},
       {l:'จ่ายสมาชิก',v:'฿'+fmt(payout),c:'blue',i:'👥'},
       {l:'รับคืนกู้',v:'฿'+fmt(repaid),c:'purple',i:'↩️'},
     ].map(c=>`<div class="stat-card"><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
