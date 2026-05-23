@@ -4,22 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <script>
-// รันใน <head> ก่อน render ใดๆ — ตรวจ LINE แล้วแสดง block page ทันที
+// รันใน <head> — ตรวจ LINE แสดง overlay ทันที
 (function(){
   var ua=navigator.userAgent||'';
   if(!/Line\//i.test(ua)) return;
   var isAndroid=/Android/i.test(ua);
   var url=location.href;
-  // เขียน HTML ทับทั้งหน้าเลย
-  document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0d0f14;color:#f0eeea;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}.box{max-width:320px;width:100%}.logo{width:72px;height:72px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#000;margin:0 auto 20px}.title{font-size:22px;font-weight:700;margin-bottom:8px}.warn{font-size:13px;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;margin-bottom:24px}.desc{font-size:16px;color:#9ca3af;margin-bottom:6px}.steps{font-size:15px;color:#f0eeea;line-height:2.2;margin-bottom:24px}.btn{display:block;width:100%;padding:16px;background:#f0a500;color:#000;border-radius:12px;font-size:17px;font-weight:700;text-decoration:none;margin-bottom:12px;border:none;cursor:pointer}.btn2{width:100%;padding:14px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:12px;font-size:15px;cursor:pointer}.url{font-size:11px;color:#4b5563;word-break:break-all;margin-top:12px}</style></head><body><div class="box"><div class="logo">B7</div><div class="title">กองทุนวง Big Seven Band</div><div class="warn">⚠️ ไม่รองรับการเปิดจาก LINE</div>');
-  if(isAndroid){
-    var intent='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
-    document.write('<div class="desc">กรุณาเปิดใน Chrome</div><div class="steps">กด <b>···</b> มุมขวาบน<br>→ เลือก <b>"เปิดด้วยเบราว์เซอร์เริ่มต้น"</b></div><a class="btn" href="'+intent+'">🌐 เปิดใน Chrome</a><button class="btn2" onclick="var t=this;navigator.clipboard.writeText(\''+url+'\').then(function(){t.textContent=\'✓ คัดลอกแล้ว!\';t.style.color=\'#22c55e\'})">📋 คัดลอก URL</button>');
-  } else {
-    document.write('<div class="desc">กรุณาเปิดใน Safari</div><div class="steps">กด <b>···</b> มุมขวาบน<br>→ เลือก <b>"เปิดใน Safari"</b></div><button class="btn" onclick="var t=this;navigator.clipboard.writeText(\''+url+'\').then(function(){t.textContent=\'✓ คัดลอกแล้ว! วางใน Safari\';t.style.background=\'#22c55e\'})">📋 คัดลอก URL ไปเปิดใน Safari</button>');
+  var intent='intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+  function showBlock(){
+    var d=document.createElement('div');
+    d.style.cssText='position:fixed;inset:0;z-index:999999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;font-family:sans-serif';
+    var btnHtml=isAndroid
+      ? '<a href="'+intent+'" style="display:block;width:100%;max-width:300px;padding:16px;background:#f0a500;color:#000;border-radius:12px;font-size:18px;font-weight:700;text-decoration:none;margin-bottom:12px">🌐 เปิดใน Chrome</a>'
+        +'<button id="cpb" style="width:100%;max-width:300px;padding:14px;background:transparent;color:#9ca3af;border:1px solid #374151;border-radius:12px;font-size:16px;cursor:pointer">📋 คัดลอก URL</button>'
+      : '<div style="font-size:15px;color:#f0eeea;margin-bottom:6px;font-weight:600">วิธีเปิดใน Safari</div>'
+        +'<div style="font-size:15px;color:#9ca3af;margin-bottom:24px;line-height:2">กด <b style=color:#f0eeea>···</b> มุมขวาบน<br>→ <b style=color:#f0eeea>"เปิดใน Safari"</b></div>'
+        +'<button id="cpb" style="width:100%;max-width:300px;padding:16px;background:#f0a500;color:#000;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer">📋 คัดลอก URL ไปเปิดใน Safari</button>';
+    d.innerHTML='<div style="width:72px;height:72px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#000;margin-bottom:20px">B7</div>'
+      +'<div style="font-size:22px;font-weight:700;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>'
+      +'<div style="font-size:14px;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;margin-bottom:20px">⚠️ ไม่รองรับการเปิดจาก LINE</div>'
+      +(isAndroid?'<div style="font-size:16px;color:#9ca3af;margin-bottom:20px">กรุณาเปิดในเบราว์เซอร์ Chrome</div>':'')
+      +btnHtml
+      +'<div style="font-size:11px;color:#4b5563;word-break:break-all;max-width:300px;margin-top:14px">'+url+'</div>';
+    document.documentElement.appendChild(d);
+    var cpb=document.getElementById('cpb');
+    if(cpb) cpb.onclick=function(){
+      navigator.clipboard.writeText(url).then(function(){
+        cpb.textContent='✓ คัดลอกแล้ว!';
+        cpb.style.color='#22c55e';
+        cpb.style.background='transparent';
+      });
+    };
+    if(isAndroid) setTimeout(function(){try{location.href=intent;}catch(e){}},400);
   }
-  document.write('<div class="url">'+url+'</div></div></body></html>');
-  document.close();
+  if(document.body) showBlock();
+  else document.addEventListener('DOMContentLoaded',showBlock);
 })();
 </script>
 <meta name="theme-color" content="#f0a500">
@@ -1459,35 +1478,15 @@ function initDates(){
   });
 }
 
-// start - แสดง login เร็วขึ้น โหลด Sheet ใน background
+// start - แสดง login ทันทีเลย ไม่รอ Sheet
 populateSelects();
-let prog=0;
-const progEl=document.getElementById('load-prog');
-const progTimer=setInterval(()=>{prog=Math.min(prog+20,90);if(progEl)progEl.style.width=prog+'%';},150);
+document.getElementById('loading-screen').style.display='none';
+document.getElementById('login-screen').style.display='flex';
 
-// แสดง login หลัง 1 วิ ไม่รอ Sheet
-const loginTimeout=setTimeout(()=>{
-  clearInterval(progTimer);
-  if(progEl)progEl.style.width='100%';
-  document.getElementById('loading-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-},1000);
-
-// โหลด Sheet ใน background — ถ้าเสร็จก่อน 1 วิ แสดง login เลย
+// โหลด Sheet ใน background หลัง login screen แสดงแล้ว
 loadDB().then(()=>{
-  clearTimeout(loginTimeout);
-  clearInterval(progTimer);
-  if(progEl)progEl.style.width='100%';
-  setTimeout(()=>{
-    document.getElementById('loading-screen').style.display='none';
-    document.getElementById('login-screen').style.display='flex';
-  },200);
   startAutoRefresh();
 }).catch(()=>{
-  clearTimeout(loginTimeout);
-  clearInterval(progTimer);
-  document.getElementById('loading-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
   startAutoRefresh();
 });
 
