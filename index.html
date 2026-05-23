@@ -374,17 +374,13 @@ tbody tr:last-child td{border-bottom:none}
 <body>
 
 <!-- LOADING OVERLAY -->
-<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;color:#000">B7</div>
-  <div style="font-family:'Kanit',sans-serif;font-size:16px;color:var(--text)">กำลังโหลด...</div>
-  <div style="width:48px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden"><div id="load-prog" style="width:0%;height:100%;background:var(--accent);transition:width .3s;border-radius:2px"></div></div>
-</div>
+<div id="loading-screen" style="display:none"></div>
 
 <!-- SYNC BAR -->
 <div id="sync-bar"></div>
 
 <!-- LOGIN -->
-<div id="login-screen" style="display:none">
+<div id="login-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px">
   <div class="login-box">
     <div class="login-logo">B7</div>
     <div class="login-title">Big Seven Band</div>
