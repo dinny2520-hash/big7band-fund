@@ -822,40 +822,49 @@ function doLogin(){
   errEl.textContent='';
   const loginBtn=document.querySelector('.login-btn');
 
-  async function tryLogin(){
-    loginBtn.disabled=true;
-    loginBtn.textContent='กำลังตรวจสอบ...';
-    // โหลดรหัสผ่านล่าสุดจาก Sheet ก่อนทุกครั้ง
-    try{
-      const d=await apiCall({action:'getAll'});
-      if(d.passwords) DB.passwords=d.passwords;
-    }catch(e){}
-    loginBtn.disabled=false;
-    loginBtn.textContent='เข้าสู่ระบบ';
-
+  function checkCredentials(){
     if(loginMode==='admin'){
       const u=document.getElementById('login-user').value;
       const p=document.getElementById('login-pass').value;
-      if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return;}
+      if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return false;}
       if(u==='ชิษณุพงศ์'&&p===DB.passwords.admin1){
-        SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};startApp();return;
+        SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};return true;
       }
       if(u==='กฤษติญา'&&p===DB.passwords.admin2){
-        SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};startApp();return;
+        SESSION={role:'admin',name:'กฤษติญา เทพธานี',memberId:'m2'};return true;
       }
-      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+      return false;
     }else{
       const mid=document.getElementById('login-member-name').value;
       const p=document.getElementById('login-member-pass').value;
-      if(!mid){errEl.textContent='กรุณาเลือกชื่อสมาชิก';return;}
+      if(!mid){errEl.textContent='กรุณาเลือกชื่อสมาชิก';return false;}
       if(p===DB.passwords.member){
         const m=MEMBERS.find(x=>x.id===mid);
-        SESSION={role:'member',name:m.name,memberId:mid};startApp();return;
+        SESSION={role:'member',name:m.name,memberId:mid};return true;
       }
-      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+      return false;
     }
   }
-  tryLogin();
+
+  // ลองใช้รหัสที่โหลดมาแล้วก่อน (เร็ว)
+  if(checkCredentials()){
+    startApp();return;
+  }
+
+  // ถ้าไม่ผ่าน ดึงรหัสใหม่จาก Sheet แล้วลองอีกครั้ง
+  loginBtn.disabled=true;
+  loginBtn.textContent='กำลังตรวจสอบ...';
+  apiCall({action:'getAll'}).then(d=>{
+    if(d.passwords)DB.passwords=d.passwords;
+    loginBtn.disabled=false;
+    loginBtn.textContent='เข้าสู่ระบบ';
+    if(checkCredentials()){startApp();}
+    else{errEl.textContent='รหัสผ่านไม่ถูกต้อง';}
+  }).catch(()=>{
+    loginBtn.disabled=false;
+    loginBtn.textContent='เข้าสู่ระบบ';
+    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+  });
 }
 function doLogout(){
   SESSION={role:'',name:'',memberId:''};
@@ -1450,23 +1459,32 @@ function initDates(){
   });
 }
 
-// start - แสดง loading ก่อน แล้วค่อยโหลด Sheet ใน background
+// start - แสดง login เร็วขึ้น โหลด Sheet ใน background
 populateSelects();
-// progress animation
 let prog=0;
 const progEl=document.getElementById('load-prog');
-const progTimer=setInterval(()=>{prog=Math.min(prog+10,85);if(progEl)progEl.style.width=prog+'%';},200);
+const progTimer=setInterval(()=>{prog=Math.min(prog+20,90);if(progEl)progEl.style.width=prog+'%';},150);
 
+// แสดง login หลัง 1 วิ ไม่รอ Sheet
+const loginTimeout=setTimeout(()=>{
+  clearInterval(progTimer);
+  if(progEl)progEl.style.width='100%';
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+},1000);
+
+// โหลด Sheet ใน background — ถ้าเสร็จก่อน 1 วิ แสดง login เลย
 loadDB().then(()=>{
+  clearTimeout(loginTimeout);
   clearInterval(progTimer);
   if(progEl)progEl.style.width='100%';
   setTimeout(()=>{
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('login-screen').style.display='flex';
-  },300);
+  },200);
   startAutoRefresh();
 }).catch(()=>{
-  // ถ้าโหลดไม่ได้ก็ให้เข้าระบบได้เลย (ใช้รหัส default)
+  clearTimeout(loginTimeout);
   clearInterval(progTimer);
   document.getElementById('loading-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
