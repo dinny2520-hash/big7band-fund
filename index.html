@@ -516,15 +516,19 @@ tbody tr:last-child td{border-bottom:none}
       <div class="card" id="repay-form-wrap">
         <div class="card-title"><span class="card-dot"></span>📥 รับเงินคืนจากสมาชิก <span style="font-size:12px;color:var(--text3)">(เฉพาะผู้ดูแล)</span></div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:var(--bg3);border-radius:var(--radius-sm)">
-          เมื่อสมาชิกชำระเงินคืน — กรอกจำนวนที่รับมาจริง แล้วกด "บันทึก"
+          เลือกสมาชิก → เลือกรายการกู้ที่รับคืน → กรอกจำนวนที่รับมาจริง
         </div>
         <div class="form-grid">
           <div class="field"><label>วันที่รับเงิน</label><input type="date" id="lr-date"></div>
           <div class="field"><label>สมาชิกที่คืนเงิน</label>
-          <select id="lr-member" onchange="showOutstanding()"></select>
-          <div class="field-note" id="lr-outstanding" style="color:var(--amber)"></div>
-        </div>
-          <div class="field"><label>จำนวนที่รับคืน (บาท)</label><input type="number" id="lr-amount" min="0" placeholder="0" inputmode="decimal"></div>
+            <select id="lr-member" onchange="updateLoanSelect()"></select>
+          </div>
+          <div class="field" id="lr-loan-wrap" style="display:none">
+            <label>เลือกรายการกู้ที่รับคืน</label>
+            <select id="lr-loan-select" onchange="showOutstanding()"></select>
+            <div class="field-note" id="lr-outstanding" style="color:var(--amber)"></div>
+          </div>
+          <div class="field"><label>จำนวนที่รับคืน (บาท) <span style="color:var(--text3);font-size:11px;font-weight:400">— แก้ไขได้</span></label><input type="number" id="lr-amount" min="0" placeholder="0" inputmode="decimal"></div>
           <div class="field"><label>หมายเหตุ</label><input type="text" id="lr-note" placeholder="เช่น หักทิปงวดที่ 1, คืนเต็มจำนวน"></div>
         </div>
         <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addRepay()">📥 บันทึกรับเงินคืน</button></div>
@@ -985,7 +989,7 @@ const renders={
     const all=[
       ...DB.transactions.map(t=>({date:t.date,label:t.category||'รายการ',type:t.type,amount:t.amount})),
       ...DB.payouts.map(p=>({date:p.date,label:'จ่าย: '+mName(p.member),type:'payout',amount:p.amount})),
-      ...DB.loans.filter(l=>l.status==='approved').map(l=>({date:l.date,label:'กู้: '+mName(l.member),type:'loan',amount:l.totalReturn||calcTotal(+l.amount)})),
+      ...DB.loans.filter(l=>l.status==='approved').map(l=>({date:l.date,label:'กู้: '+mName(l.member),type:'loan',amount:+l.amount})),
     ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
     const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
     const labels={income:'รายรับ',expense:'รายจ่าย',payout:'จ่ายสมาชิก',loan:'กู้เงิน'};
@@ -1148,22 +1152,41 @@ const renders={
       <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</div>
       <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
-    // members
+    // members — แสดงยอดคงค้างแยกตามประเภทการกู้
     const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
     document.getElementById('report-members').innerHTML=MEMBERS.map(m=>{
       const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
-      // ยอดกู้ที่ต้องคืน = เงินต้น + ดอกเบี้ย
-      const lnT=DB.loans.filter(l=>l.member===m.id&&l.status==='approved').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
+      const approvedLoans=DB.loans.filter(l=>l.member===m.id&&l.status==='approved');
+      const lnT=approvedLoans.reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const repaid=rMap[m.id]||0;const out=lnT-repaid;
-      return`<div class="member-card">
-        <div class="m-avatar">${m.initials}</div>
-        <div class="m-name">${m.name}</div>
+      // แสดงรายการกู้แต่ละรายการที่ยังค้างอยู่
+      const loanDetails=approvedLoans.map(l=>{
+        const tot=+(l.totalReturn||calcTotal(+l.amount));
+        return`<div class="m-stat" style="flex-direction:column;align-items:flex-start;gap:2px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;width:100%">
+            <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:11px">${TYPE_LABEL[l.loanType]||''}</span>
+            <span style="font-weight:600;color:var(--amber)">฿${fmt(tot)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text3)">${fmtDate(l.date)}${l.reason?' · '+l.reason:''}</div>
+          ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDate(l.returnDate)}</div>`:''}
+          ${l.loanType==='daily'&&l.dailyRate?`<div style="font-size:11px;color:var(--green)">หักวันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</div>`:''}
+        </div>`;
+      }).join('');
+      return`<div class="member-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="m-avatar" style="margin:0;flex-shrink:0">${m.initials}</div>
+          <div class="m-name" style="margin:0">${m.name}</div>
+        </div>
         <div class="m-divider"></div>
+        ${approvedLoans.length>0?`
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px;font-weight:500">รายการกู้คงค้าง:</div>
+          ${loanDetails}
+          <div class="m-divider"></div>`:''}
         <div class="m-stat"><span>รับเงินรวม</span><span>฿${fmt(po)}</span></div>
-        <div class="m-stat"><span>ยอดต้องคืน</span><span>฿${fmt(lnT)}</span></div>
+        <div class="m-stat"><span>ยอดต้องคืนทั้งหมด</span><span>฿${fmt(lnT)}</span></div>
         <div class="m-stat"><span>คืนแล้ว</span><span>฿${fmt(repaid)}</span></div>
-        <div class="m-stat"><span>คงค้าง</span><span class="${out>0?'neg':''}">฿${fmt(out)}</span></div>
+        <div class="m-stat"><span style="font-weight:600">คงค้าง</span><span class="${out>0?'neg':''}" style="font-weight:700;font-size:16px">฿${fmt(out)}</span></div>
         ${lnP>0?`<div class="m-stat"><span style="color:var(--amber)">รอพิจารณา</span><span style="color:var(--amber)">฿${fmt(lnP)}</span></div>`:''}
       </div>`;
     }).join('');
@@ -1202,27 +1225,59 @@ function addPayout(){
   document.getElementById('po-amount').value='';document.getElementById('po-note').value='';
   toast('บันทึกการจ่ายเงินสำเร็จ');
 }
-function showOutstanding(){
+function updateLoanSelect(){
   const mid=document.getElementById('lr-member').value;
-  const el=document.getElementById('lr-outstanding');
-  if(!el||!mid)return;
-  const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
-  const total=DB.loans.filter(l=>l.member===mid&&l.status==='approved').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
-  const repaid=rMap[mid]||0;
-  const out=total-repaid;
-  el.textContent=out>0?`ยอดคงค้าง (รวมดอก): ฿${fmt(out)}`:'ไม่มียอดค้างชำระ';
-  el.style.color=out>0?'var(--amber)':'var(--green)';
+  const wrap=document.getElementById('lr-loan-wrap');
+  const sel=document.getElementById('lr-loan-select');
+  const outEl=document.getElementById('lr-outstanding');
+  if(!mid){wrap.style.display='none';if(outEl)outEl.textContent='';return;}
+  const loans=DB.loans.filter(l=>l.member===mid&&l.status==='approved');
+  if(!loans.length){wrap.style.display='none';if(outEl)outEl.textContent='ไม่มียอดค้างชำระ';if(outEl)outEl.style.color='var(--green)';return;}
+  const rMap={};DB.repayments.filter(r=>r.member===mid).forEach(r=>{
+    if(r.loanId) rMap[r.loanId]=(rMap[r.loanId]||0)+(+r.amount);
+    else{/* กระจายให้ทั่วถ้าไม่มี loanId */}
+  });
+  sel.innerHTML=loans.map(l=>{
+    const tot=+(l.totalReturn||calcTotal(+l.amount));
+    const paidForThis=rMap[l.id]||0;
+    const remaining=tot-paidForThis;
+    return`<option value="${l.id}" data-remaining="${remaining}">
+      ${TYPE_LABEL[l.loanType]} · ฿${fmt(l.amount)} (คงเหลือ ฿${fmt(Math.max(0,remaining))}) · ${fmtDate(l.date)}
+    </option>`;
+  }).join('');
+  wrap.style.display='block';
+  showOutstanding();
+}
+function showOutstanding(){
+  const sel=document.getElementById('lr-loan-select');
+  const outEl=document.getElementById('lr-outstanding');
+  if(!sel||!outEl)return;
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt)return;
+  const remaining=+opt.getAttribute('data-remaining');
+  outEl.textContent=remaining>0?`ยอดคงค้างรายการนี้: ฿${fmt(remaining)}`:'ชำระครบแล้ว';
+  outEl.style.color=remaining>0?'var(--amber)':'var(--green)';
+  // ใส่ยอดคงค้างให้อัตโนมัติ
+  const amtEl=document.getElementById('lr-amount');
+  if(amtEl&&remaining>0) amtEl.value=remaining;
 }
 function addRepay(){
   const date=document.getElementById('lr-date').value||today();
   const member=document.getElementById('lr-member').value;
+  const loanSel=document.getElementById('lr-loan-select');
+  const loanId=loanSel?loanSel.value:'';
+  const loanLabel=loanSel&&loanSel.options[loanSel.selectedIndex]?loanSel.options[loanSel.selectedIndex].text.split('·')[0].trim():'';
   const amount=+document.getElementById('lr-amount').value;
   const note=document.getElementById('lr-note').value.trim();
   if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
-  const row={id:Date.now(),date,member,amount,note};
+  if(!member){alert('กรุณาเลือกสมาชิก');return;}
+  const autoNote=loanLabel?(loanLabel+(note?' · '+note:'')):note;
+  const row={id:Date.now(),date,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);renders.loans();saveRow('repayments',row);
-  document.getElementById('lr-amount').value='';document.getElementById('lr-note').value='';
-  toast('บันทึกการคืนเงินสำเร็จ');
+  document.getElementById('lr-amount').value='';
+  document.getElementById('lr-note').value='';
+  updateLoanSelect();
+  toast('บันทึกรับเงินคืนสำเร็จ');
 }
 
 function setLoanType(t){
