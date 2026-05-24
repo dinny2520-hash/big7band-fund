@@ -788,9 +788,19 @@ async function apiCall(body){
 function normalizeRows(arr){
   return (arr||[]).map(r=>{
     const o={};
-    Object.entries(r).forEach(([k,v])=>o[k]=v===''||v===undefined?'':v);
+    Object.entries(r).forEach(([k,v])=>{
+      if(v===''||v===undefined){o[k]='';return;}
+      // แปลง ISO datetime เป็น YYYY-MM-DD ตัด timezone ออก
+      if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(v)){
+        o[k]=v.substring(0,10);
+      } else {
+        o[k]=v;
+      }
+    });
     if(o.amount!=='')o.amount=+o.amount;
     if(o.dailyRate!=='')o.dailyRate=+o.dailyRate;
+    // loanId ต้องเป็น string เสมอ
+    if(o.loanId!==undefined&&o.loanId!=='')o.loanId=String(o.loanId);
     return o;
   });
 }
@@ -823,7 +833,15 @@ function startAutoRefresh(){
     try{
       const d=await apiCall({action:'getAll'});
       if(!d.error){
-        ['transactions','payouts','loans','repayments'].forEach(k=>DB[k]=normalizeRows(d[k]));
+        // merge repayments — เก็บ loanId จาก local ถ้า Sheet ยังไม่มี
+        const localRepay={};
+        DB.repayments.forEach(r=>{if(r.loanId)localRepay[String(r.id)]=r.loanId;});
+        ['transactions','payouts','loans'].forEach(k=>DB[k]=normalizeRows(d[k]));
+        const newRepay=normalizeRows(d['repayments']).map(r=>{
+          if(!r.loanId&&localRepay[String(r.id)]) r.loanId=localRepay[String(r.id)];
+          return r;
+        });
+        DB.repayments=newRepay;
         if(d.passwords)DB.passwords=d.passwords;
         const active=document.querySelector('.page.active');
         if(active)renders[active.id.replace('page-','')]&&renders[active.id.replace('page-','')]();
@@ -1324,17 +1342,18 @@ function showOutstanding(){
   if(amtEl&&remaining>0) amtEl.value=remaining;
 }
 function addRepay(){
-  const date=document.getElementById('lr-date').value||today();
+  const dateVal=document.getElementById('lr-date').value||today();
   const member=document.getElementById('lr-member').value;
   const loanSel=document.getElementById('lr-loan-select');
-  const loanId=loanSel?loanSel.value:'';
+  const loanId=loanSel?String(loanSel.value):'';
   const loanLabel=loanSel&&loanSel.options[loanSel.selectedIndex]?loanSel.options[loanSel.selectedIndex].text.split('·')[0].trim():'';
   const amount=+document.getElementById('lr-amount').value;
   const note=document.getElementById('lr-note').value.trim();
   if(!amount){alert('กรุณากรอกจำนวนเงิน');return;}
   if(!member){alert('กรุณาเลือกสมาชิก');return;}
+  if(!loanId){alert('กรุณาเลือกรายการกู้ที่รับคืน');return;}
   const autoNote=loanLabel?(loanLabel+(note?' · '+note:'')):note;
-  const row={id:Date.now(),date,member,loanId,amount,note:autoNote};
+  const row={id:Date.now(),date:dateVal,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);renders.loans();saveRow('repayments',row);
   document.getElementById('lr-amount').value='';
   document.getElementById('lr-note').value='';
