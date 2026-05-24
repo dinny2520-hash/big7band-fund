@@ -1156,19 +1156,30 @@ const renders={
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // members — แสดงยอดคงค้างแยกตามประเภทการกู้
     const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
+    // คำนวณยอดคืนแยกต่อ loanId
+    const rByLoan={};DB.repayments.forEach(r=>{
+      if(r.loanId) rByLoan[r.loanId]=(rByLoan[r.loanId]||0)+(+r.amount);
+    });
     document.getElementById('report-members').innerHTML=MEMBERS.map(m=>{
       const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
       const approvedLoans=DB.loans.filter(l=>l.member===m.id&&l.status==='approved');
       const lnT=approvedLoans.reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const repaid=rMap[m.id]||0;const out=lnT-repaid;
-      // แสดงรายการกู้แต่ละรายการที่ยังค้างอยู่
-      const loanDetails=approvedLoans.map(l=>{
+      // แสดงเฉพาะรายการที่ยังค้างอยู่
+      const pendingLoans=approvedLoans.filter(l=>{
         const tot=+(l.totalReturn||calcTotal(+l.amount));
+        const paidForThis=rByLoan[l.id]||0;
+        return (tot-paidForThis)>0;
+      });
+      const loanDetails=pendingLoans.map(l=>{
+        const tot=+(l.totalReturn||calcTotal(+l.amount));
+        const paidForThis=rByLoan[l.id]||0;
+        const remaining=tot-paidForThis;
         return`<div class="m-stat" style="flex-direction:column;align-items:flex-start;gap:2px;padding:6px 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;width:100%">
             <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:11px">${TYPE_LABEL[l.loanType]||''}</span>
-            <span style="font-weight:600;color:var(--amber)">฿${fmt(tot)}</span>
+            <span style="font-weight:600;color:var(--red)">฿${fmt(remaining)}</span>
           </div>
           <div style="font-size:12px;color:var(--text3)">${fmtDate(l.date)}${l.reason?' · '+l.reason:''}</div>
           ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDate(l.returnDate)}</div>`:''}
@@ -1181,14 +1192,15 @@ const renders={
           <div class="m-name" style="margin:0">${m.name}</div>
         </div>
         <div class="m-divider"></div>
-        ${approvedLoans.length>0?`
+        ${pendingLoans.length>0?`
           <div style="font-size:12px;color:var(--text3);margin-bottom:4px;font-weight:500">รายการกู้คงค้าง:</div>
           ${loanDetails}
-          <div class="m-divider"></div>`:''}
+          <div class="m-divider"></div>`
+          :'<div style="font-size:13px;color:var(--green);padding:6px 0">✅ ไม่มียอดค้างชำระ</div><div class="m-divider"></div>'}
         <div class="m-stat"><span>รับเงินรวม</span><span>฿${fmt(po)}</span></div>
         <div class="m-stat"><span>ยอดต้องคืนทั้งหมด</span><span>฿${fmt(lnT)}</span></div>
         <div class="m-stat"><span>คืนแล้ว</span><span>฿${fmt(repaid)}</span></div>
-        <div class="m-stat"><span style="font-weight:600">คงค้าง</span><span class="${out>0?'neg':''}" style="font-weight:700;font-size:16px">฿${fmt(out)}</span></div>
+        <div class="m-stat"><span style="font-weight:600">คงค้าง</span><span class="${out>0?'neg':''}" style="font-weight:700;font-size:16px">฿${fmt(Math.max(0,out))}</span></div>
         ${lnP>0?`<div class="m-stat"><span style="color:var(--amber)">รอพิจารณา</span><span style="color:var(--amber)">฿${fmt(lnP)}</span></div>`:''}
       </div>`;
     }).join('');
