@@ -1166,15 +1166,17 @@ const renders={
       const lnT=approvedLoans.reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const lnP=DB.loans.filter(l=>l.member===m.id&&l.status==='pending').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
       const repaid=rMap[m.id]||0;const out=lnT-repaid;
+      // ใช้ calcRepaidByLoan เพื่อความแม่นยำ
+      const rByLoanM=calcRepaidByLoan(m.id,approvedLoans);
       // แสดงเฉพาะรายการที่ยังค้างอยู่
       const pendingLoans=approvedLoans.filter(l=>{
         const tot=+(l.totalReturn||calcTotal(+l.amount));
-        const paidForThis=rByLoan[String(l.id)]||0;
+        const paidForThis=rByLoanM[String(l.id)]||0;
         return (tot-paidForThis)>0;
       });
       const loanDetails=pendingLoans.map(l=>{
         const tot=+(l.totalReturn||calcTotal(+l.amount));
-        const paidForThis=rByLoan[String(l.id)]||0;
+        const paidForThis=rByLoanM[String(l.id)]||0;
         const remaining=tot-paidForThis;
         return`<div class="m-stat" style="flex-direction:column;align-items:flex-start;gap:2px;padding:6px 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;width:100%">
@@ -1246,12 +1248,11 @@ function updateLoanSelect(){
   const outEl=document.getElementById('lr-outstanding');
   if(!mid){wrap.style.display='none';if(outEl)outEl.textContent='';return;}
   const loans=DB.loans.filter(l=>l.member===mid&&l.status==='approved');
-  if(!loans.length){wrap.style.display='none';if(outEl)outEl.textContent='ไม่มียอดค้างชำระ';if(outEl)outEl.style.color='var(--green)';return;}
-  // คำนวณยอดคืนแยกต่อ loanId
-  const rByLoan={};
-  DB.repayments.filter(r=>r.member===mid&&r.loanId).forEach(r=>{
-    rByLoan[String(r.loanId)]=(rByLoan[String(r.loanId)]||0)+(+r.amount);
-  });
+  if(!loans.length){wrap.style.display='none';if(outEl){outEl.textContent='ไม่มียอดค้างชำระ';outEl.style.color='var(--green)';}return;}
+
+  // คำนวณยอดที่จ่ายต่อ loanId
+  const rByLoan=calcRepaidByLoan(mid,loans);
+
   // กรองเฉพาะรายการที่ยังค้างอยู่
   const pendingLoans=loans.filter(l=>{
     const tot=+(l.totalReturn||calcTotal(+l.amount));
@@ -1272,6 +1273,35 @@ function updateLoanSelect(){
   }).join('');
   wrap.style.display='block';
   showOutstanding();
+}
+
+// คำนวณยอดที่จ่ายต่อ loanId — รองรับทั้ง repayment ที่มีและไม่มี loanId
+function calcRepaidByLoan(mid, loans){
+  const rByLoan={};
+  const repayments=DB.repayments.filter(r=>r.member===mid).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  
+  // repayment ที่มี loanId — นับตรงๆ
+  repayments.filter(r=>r.loanId).forEach(r=>{
+    rByLoan[String(r.loanId)]=(rByLoan[String(r.loanId)]||0)+(+r.amount);
+  });
+  
+  // repayment ที่ไม่มี loanId — กระจายตามลำดับวันที่กู้ (เก่าก่อน)
+  const noIdRepayments=repayments.filter(r=>!r.loanId);
+  if(noIdRepayments.length>0){
+    const loansSorted=[...loans].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    let remaining_pool=noIdRepayments.reduce((s,r)=>s+(+r.amount),0);
+    loansSorted.forEach(l=>{
+      if(remaining_pool<=0) return;
+      const tot=+(l.totalReturn||calcTotal(+l.amount));
+      const alreadyPaid=rByLoan[String(l.id)]||0;
+      const canPay=Math.min(remaining_pool, tot-alreadyPaid);
+      if(canPay>0){
+        rByLoan[String(l.id)]=(rByLoan[String(l.id)]||0)+canPay;
+        remaining_pool-=canPay;
+      }
+    });
+  }
+  return rByLoan;
 }
 function showOutstanding(){
   const sel=document.getElementById('lr-loan-select');
