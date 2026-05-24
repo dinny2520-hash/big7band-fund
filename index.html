@@ -1070,7 +1070,7 @@ const renders={
     updateSidebar();
   },
   transactions(){
-    const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date));
+    const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('tx-list').innerHTML=sorted.length?sorted.map(t=>`<tr>
       <td data-label="วันที่">${fmtDate(t.date)}</td>
       <td data-label="ประเภท"><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
@@ -1082,7 +1082,7 @@ const renders={
     updateSidebar();
   },
   payouts(){
-    const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date));
+    const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('po-list').innerHTML=sorted.length?sorted.map(p=>`<tr>
       <td data-label="วันที่">${fmtDate(p.date)}</td>
       <td data-label="สมาชิก">${mName(p.member)}</td>
@@ -1094,7 +1094,7 @@ const renders={
   },
   loans(){
     const admin=isAdmin();
-    const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
       let extra='';
       if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:11px;color:var(--text3)">คืน ${fmtDate(l.returnDate)}</span>`;
@@ -1112,7 +1112,7 @@ const renders={
           ${admin?`<button class="btn-del" onclick="del('loans',${l.id})">🗑</button>`:''}
         </td></tr>`;
     }).join(''):'<tr class="empty-row"><td colspan="8">ยังไม่มีรายการ</td></tr>';
-    const rsorted=[...DB.repayments].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const rsorted=[...DB.repayments].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('lr-list').innerHTML=rsorted.length?rsorted.map(r=>`<tr>
       <td data-label="วันที่">${fmtDate(r.date)}</td>
       <td data-label="สมาชิก">${mName(r.member)}</td>
@@ -1158,7 +1158,7 @@ const renders={
     const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
     // คำนวณยอดคืนแยกต่อ loanId
     const rByLoan={};DB.repayments.forEach(r=>{
-      if(r.loanId) rByLoan[r.loanId]=(rByLoan[r.loanId]||0)+(+r.amount);
+      if(r.loanId) rByLoan[String(r.loanId)]=(rByLoan[String(r.loanId)]||0)+(+r.amount);
     });
     document.getElementById('report-members').innerHTML=MEMBERS.map(m=>{
       const po=DB.payouts.filter(p=>p.member===m.id).reduce((s,p)=>s+(+p.amount),0);
@@ -1169,12 +1169,12 @@ const renders={
       // แสดงเฉพาะรายการที่ยังค้างอยู่
       const pendingLoans=approvedLoans.filter(l=>{
         const tot=+(l.totalReturn||calcTotal(+l.amount));
-        const paidForThis=rByLoan[l.id]||0;
+        const paidForThis=rByLoan[String(l.id)]||0;
         return (tot-paidForThis)>0;
       });
       const loanDetails=pendingLoans.map(l=>{
         const tot=+(l.totalReturn||calcTotal(+l.amount));
-        const paidForThis=rByLoan[l.id]||0;
+        const paidForThis=rByLoan[String(l.id)]||0;
         const remaining=tot-paidForThis;
         return`<div class="m-stat" style="flex-direction:column;align-items:flex-start;gap:2px;padding:6px 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;width:100%">
@@ -1247,17 +1247,28 @@ function updateLoanSelect(){
   if(!mid){wrap.style.display='none';if(outEl)outEl.textContent='';return;}
   const loans=DB.loans.filter(l=>l.member===mid&&l.status==='approved');
   if(!loans.length){wrap.style.display='none';if(outEl)outEl.textContent='ไม่มียอดค้างชำระ';if(outEl)outEl.style.color='var(--green)';return;}
-  const rMap={};DB.repayments.filter(r=>r.member===mid).forEach(r=>{
-    if(r.loanId) rMap[r.loanId]=(rMap[r.loanId]||0)+(+r.amount);
-    else{/* กระจายให้ทั่วถ้าไม่มี loanId */}
+  // คำนวณยอดคืนแยกต่อ loanId
+  const rByLoan={};
+  DB.repayments.filter(r=>r.member===mid&&r.loanId).forEach(r=>{
+    rByLoan[String(r.loanId)]=(rByLoan[String(r.loanId)]||0)+(+r.amount);
   });
-  sel.innerHTML=loans.map(l=>{
+  // กรองเฉพาะรายการที่ยังค้างอยู่
+  const pendingLoans=loans.filter(l=>{
     const tot=+(l.totalReturn||calcTotal(+l.amount));
-    const paidForThis=rMap[l.id]||0;
-    const remaining=tot-paidForThis;
-    return`<option value="${l.id}" data-remaining="${remaining}">
-      ${TYPE_LABEL[l.loanType]} · ฿${fmt(l.amount)} (คงเหลือ ฿${fmt(Math.max(0,remaining))}) · ${fmtDate(l.date)}
-    </option>`;
+    const paid=rByLoan[String(l.id)]||0;
+    return (tot-paid)>0;
+  });
+  if(!pendingLoans.length){
+    wrap.style.display='none';
+    if(outEl){outEl.textContent='✅ ชำระครบทุกรายการแล้ว';outEl.style.color='var(--green)';}
+    document.getElementById('lr-amount').value='';
+    return;
+  }
+  sel.innerHTML=pendingLoans.map(l=>{
+    const tot=+(l.totalReturn||calcTotal(+l.amount));
+    const paid=rByLoan[String(l.id)]||0;
+    const remaining=tot-paid;
+    return`<option value="${l.id}" data-remaining="${remaining}">${TYPE_LABEL[l.loanType]} · คงเหลือ ฿${fmt(remaining)} · ${fmtDate(l.date)}</option>`;
   }).join('');
   wrap.style.display='block';
   showOutstanding();
@@ -1269,9 +1280,8 @@ function showOutstanding(){
   const opt=sel.options[sel.selectedIndex];
   if(!opt)return;
   const remaining=+opt.getAttribute('data-remaining');
-  outEl.textContent=remaining>0?`ยอดคงค้างรายการนี้: ฿${fmt(remaining)}`:'ชำระครบแล้ว';
+  outEl.textContent=remaining>0?`ยอดคงค้างรายการนี้: ฿${fmt(remaining)}`:'✅ ชำระครบแล้ว';
   outEl.style.color=remaining>0?'var(--amber)':'var(--green)';
-  // ใส่ยอดคงค้างให้อัตโนมัติ
   const amtEl=document.getElementById('lr-amount');
   if(amtEl&&remaining>0) amtEl.value=remaining;
 }
