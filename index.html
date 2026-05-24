@@ -761,7 +761,13 @@ function fmtDate(d){
     return `${day}/${month}/${year}`;
   }catch(e){return String(d);}
 }
-function today(){return new Date().toISOString().split('T')[0];}
+function today(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function isAdmin(){return SESSION.role==='superadmin'||SESSION.role==='admin';}
 function isSuperAdmin(){return SESSION.role==='superadmin';}
 function canSee(page){return page.roles.includes('all')||page.roles.includes(SESSION.role);}
@@ -1280,24 +1286,27 @@ function calcRepaidByLoan(mid, loans){
   const rByLoan={};
   const repayments=DB.repayments.filter(r=>r.member===mid).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   
-  // repayment ที่มี loanId — นับตรงๆ
+  // repayment ที่มี loanId — นับตรงๆ ก่อน
   repayments.filter(r=>r.loanId).forEach(r=>{
     rByLoan[String(r.loanId)]=(rByLoan[String(r.loanId)]||0)+(+r.amount);
   });
   
-  // repayment ที่ไม่มี loanId — กระจายตามลำดับวันที่กู้ (เก่าก่อน)
+  // repayment เก่าที่ไม่มี loanId — กระจายตามวันที่กู้เก่าสุดก่อน แต่ข้ามรายการที่คืนครบแล้ว
   const noIdRepayments=repayments.filter(r=>!r.loanId);
   if(noIdRepayments.length>0){
-    const loansSorted=[...loans].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-    let remaining_pool=noIdRepayments.reduce((s,r)=>s+(+r.amount),0);
-    loansSorted.forEach(l=>{
-      if(remaining_pool<=0) return;
-      const tot=+(l.totalReturn||calcTotal(+l.amount));
-      const alreadyPaid=rByLoan[String(l.id)]||0;
-      const canPay=Math.min(remaining_pool, tot-alreadyPaid);
-      if(canPay>0){
-        rByLoan[String(l.id)]=(rByLoan[String(l.id)]||0)+canPay;
-        remaining_pool-=canPay;
+    // เรียงลำดับตาม id (เก่าก่อน = id น้อยกว่า)
+    const loansSorted=[...loans].sort((a,b)=>+a.id - +b.id);
+    noIdRepayments.forEach(r=>{
+      let amt=+r.amount;
+      for(const l of loansSorted){
+        if(amt<=0) break;
+        const tot=+(l.totalReturn||calcTotal(+l.amount));
+        const paid=rByLoan[String(l.id)]||0;
+        const canPay=Math.min(amt, Math.max(0, tot-paid));
+        if(canPay>0){
+          rByLoan[String(l.id)]=(rByLoan[String(l.id)]||0)+canPay;
+          amt-=canPay;
+        }
       }
     });
   }
