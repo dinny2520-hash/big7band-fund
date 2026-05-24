@@ -211,6 +211,9 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ===== MEMBER GRID ===== */
 .member-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:768px){
+  .member-grid{grid-template-columns:1fr!important}
+}
 .member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
 .m-avatar{width:48px;height:48px;border-radius:50%;background:var(--bg4);border:2px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;color:var(--accent);margin:0 auto 10px}
 .m-name{font-weight:500;font-size:13px;margin-bottom:8px}
@@ -300,7 +303,6 @@ tbody tr:last-child td{border-bottom:none}
   .page{width:100%!important;max-width:100%!important;display:none}
   .page.active{display:block!important}
   .stats{grid-template-columns:1fr 1fr!important}
-  .member-grid{grid-template-columns:1fr 1fr!important}
   .form-2,.form-3,.form-4{grid-template-columns:1fr!important}
   .modal-overlay{align-items:flex-end}
   .modal-box{max-width:100%!important;border-radius:20px 20px 0 0}
