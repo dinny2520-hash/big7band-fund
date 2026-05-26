@@ -991,27 +991,8 @@ function calcBalance(){
   let income=0,expense=0,payout=0,loanOut=0,repaid=0;
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
-  // หักออกแค่เงินต้น
   DB.loans.filter(l=>l.status==='approved').forEach(l=>{loanOut+=+l.amount;});
-  // รับคืน = เงินต้นที่กลับมา (ดอกเบี้ยอยู่ใน transactions แล้ว)
-  // แยก repayment ที่มี loanId (ใหม่) และไม่มี (เก่า)
-  DB.repayments.forEach(r=>{
-    if(r.loanId){
-      // ใหม่: รับคืนรวมดอก แต่ดอกถูกบันทึกใน transactions แล้ว
-      // ดังนั้นนับแค่เงินต้นคืน = amount - interest portion
-      const loan=DB.loans.find(l=>String(l.id)===String(r.loanId));
-      if(loan){
-        const tot=calcTotal(+loan.amount);
-        const intPortion=Math.round((+r.amount/tot)*calcInterest(+loan.amount)*100)/100;
-        repaid+=(+r.amount-intPortion);
-      } else {
-        repaid+=+r.amount;
-      }
-    } else {
-      // เก่า: นับเต็ม
-      repaid+=+r.amount;
-    }
-  });
+  DB.repayments.forEach(r=>repaid+=+r.amount);
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
 function updateSidebar(){
@@ -1392,39 +1373,11 @@ function addRepay(){
   const row={id:Date.now(),date:dateVal,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);
   saveRow('repayments',row);
-
-  // คำนวณดอกเบี้ยที่อยู่ในยอดที่รับคืน
-  if(loan){
-    const principal=+loan.amount;
-    const interest=calcInterest(principal);
-    const totalReturn=calcTotal(principal);
-    // สัดส่วนดอกเบี้ยในยอดที่รับคืน
-    const interestPortion=Math.round((amount/totalReturn)*interest*100)/100;
-    if(interestPortion>0){
-      // บันทึกดอกเบี้ยเข้า transactions อัตโนมัติ
-      const interestTx={
-        id:Date.now()+1,
-        date:dateVal,
-        type:'income',
-        amount:interestPortion,
-        category:'ดอกเบี้ยกู้ยืม',
-        note:`ดอกเบี้ย ${mName(member)} · ${loanLabel}`
-      };
-      DB.transactions.push(interestTx);
-      saveRow('transactions',interestTx);
-      toast(`บันทึกรับเงินคืน ฿${fmt(amount)} · ดอกเบี้ย ฿${fmt(interestPortion)} เข้ารายรับอัตโนมัติ`,3500);
-    } else {
-      toast('บันทึกรับเงินคืนสำเร็จ');
-    }
-  } else {
-    toast('บันทึกรับเงินคืนสำเร็จ');
-  }
-
   renders.loans();
-  renders.transactions&&renders.transactions();
   document.getElementById('lr-amount').value='';
   document.getElementById('lr-note').value='';
   updateLoanSelect();
+  toast(`บันทึกรับเงินคืน ฿${fmt(amount)} สำเร็จ`);
 }
 
 function setLoanType(t){
