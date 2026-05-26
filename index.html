@@ -992,7 +992,21 @@ function calcBalance(){
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
   DB.loans.filter(l=>l.status==='approved').forEach(l=>{loanOut+=+l.amount;});
-  DB.repayments.forEach(r=>repaid+=+r.amount);
+  // repayment มี loanId: นับแค่เงินต้น (ดอกอยู่ใน transactions แล้ว)
+  // repayment เก่าไม่มี loanId: นับเต็ม
+  DB.repayments.forEach(r=>{
+    if(r.loanId){
+      const loan=DB.loans.find(l=>String(l.id)===String(r.loanId));
+      if(loan&&+loan.amount>0){
+        const tot=calcTotal(+loan.amount);
+        const principal=tot>0?Math.round((+r.amount/tot)*(+loan.amount)*100)/100:+r.amount;
+        repaid+=principal;
+      }else{repaid+=+r.amount;}
+    }else{
+      // เก่า: นับเต็ม แต่หักดอกที่บันทึกแล้วออก (ถ้ามี)
+      repaid+=+r.amount;
+    }
+  });
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
 function updateSidebar(){
