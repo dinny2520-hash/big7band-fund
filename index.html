@@ -1389,11 +1389,30 @@ function addRepay(){
   const row={id:Date.now(),date:dateVal,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);
   saveRow('repayments',row);
+
+  // บันทึกดอกเบี้ยเข้า transactions อัตโนมัติ
+  if(loan&&+loan.amount>0){
+    const tot=calcTotal(+loan.amount);
+    const interestPortion=tot>0?Math.round((amount/tot)*calcInterest(+loan.amount)*100)/100:0;
+    if(interestPortion>0){
+      const interestTx={
+        id:Date.now()+1,
+        date:dateVal,
+        type:'income',
+        amount:interestPortion,
+        category:'ดอกเบี้ยกู้ยืม',
+        note:`ดอกเบี้ย ${mName(member)} · ${loanLabel}`
+      };
+      DB.transactions.push(interestTx);
+      saveRow('transactions',interestTx);
+      toast(`บันทึกรับเงินคืน ฿${fmt(amount)} · ดอกเบี้ย ฿${fmt(interestPortion)} เข้ารายรับแล้ว`,3500);
+    }else{toast('บันทึกรับเงินคืนสำเร็จ');}
+  }else{toast('บันทึกรับเงินคืนสำเร็จ');}
+
   renders.loans();
   document.getElementById('lr-amount').value='';
   document.getElementById('lr-note').value='';
   updateLoanSelect();
-  toast(`บันทึกรับเงินคืน ฿${fmt(amount)} สำเร็จ`);
 }
 
 function setLoanType(t){
