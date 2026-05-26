@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -992,20 +991,8 @@ function calcBalance(){
   let income=0,expense=0,payout=0,loanOut=0,repaid=0;
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
-  // หักแค่เงินต้น
   DB.loans.filter(l=>l.status==='approved').forEach(l=>{loanOut+=+l.amount;});
-  // repayment ใหม่มี loanId: นับแค่เงินต้น (ดอกเบี้ยอยู่ใน transactions แล้ว)
-  // repayment เก่าไม่มี loanId: นับเต็ม
-  DB.repayments.forEach(r=>{
-    if(r.loanId){
-      const loan=DB.loans.find(l=>String(l.id)===String(r.loanId));
-      if(loan&&+loan.amount>0){
-        const tot=calcTotal(+loan.amount);
-        const principal=tot>0?Math.round((+r.amount/tot)*(+loan.amount)*100)/100:+r.amount;
-        repaid+=principal;
-      }else{repaid+=+r.amount;}
-    }else{repaid+=+r.amount;}
-  });
+  DB.repayments.forEach(r=>repaid+=+r.amount);
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
 function updateSidebar(){
@@ -1028,11 +1015,14 @@ const renders={
   dashboard(){
     const{income,expense,payout,loanOut,repaid,balance}=calcBalance();
       const totalLoanOut=DB.loans.filter(l=>l.status==='approved').reduce((s,l)=>s+(+(l.totalReturn||calcTotal(+l.amount))),0);
+      // หักดอกเบี้ยที่บันทึกใน transactions แล้วออก เพื่อไม่ให้นับซ้ำ
+      const interestRecorded=DB.transactions.filter(t=>t.type==='income'&&t.category==='ดอกเบี้ยกู้ยืม').reduce((s,t)=>s+(+t.amount),0);
+      const outstanding=Math.max(0,totalLoanOut-repaid-interestRecorded);
     document.getElementById('stat-cards').innerHTML=[
       {l:'ยอดคงเหลือ',v:'฿'+fmt(balance),c:balance>=0?'green':'red',i:'💰'},
       {l:'รายรับรวม',v:'฿'+fmt(income),c:'green',i:'📈'},
       {l:'รายจ่ายรวม',v:'฿'+fmt(expense+payout),c:'red',i:'📉'},
-      {l:'กู้คงค้าง (รวมดอก)',v:'฿'+fmt(Math.max(0,totalLoanOut-repaid)),c:'amber',i:'📄'},
+      {l:'กู้คงค้าง (รวมดอก)',v:'฿'+fmt(outstanding),c:'amber',i:'📄'},
       {l:'จ่ายสมาชิก',v:'฿'+fmt(payout),c:'blue',i:'👥'},
       {l:'รับคืนกู้',v:'฿'+fmt(repaid),c:'purple',i:'↩️'},
     ].map(c=>`<div class="stat-card"><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
@@ -1382,34 +1372,14 @@ function addRepay(){
   const loan=DB.loans.find(l=>String(l.id)===loanId);
   const autoNote=loanLabel?(loanLabel+(note?' · '+note:'')):note;
 
-  // บันทึก repayment
   const row={id:Date.now(),date:dateVal,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);
   saveRow('repayments',row);
-
-  // แยกดอกเบี้ยบันทึกเข้า transactions อัตโนมัติ
-  if(loan&&+loan.amount>0){
-    const tot=calcTotal(+loan.amount);
-    const interestPortion=tot>0?Math.round((amount/tot)*calcInterest(+loan.amount)*100)/100:0;
-    if(interestPortion>0){
-      const interestTx={
-        id:Date.now()+1,
-        date:dateVal,
-        type:'income',
-        amount:interestPortion,
-        category:'ดอกเบี้ยกู้ยืม',
-        note:`ดอกเบี้ย ${mName(member)} · ${loanLabel}`
-      };
-      DB.transactions.push(interestTx);
-      saveRow('transactions',interestTx);
-      toast(`บันทึกรับเงินคืน ฿${fmt(amount)} · ดอกเบี้ย ฿${fmt(interestPortion)} เข้ารายรับแล้ว`,3500);
-    }else{toast('บันทึกรับเงินคืนสำเร็จ');}
-  }else{toast('บันทึกรับเงินคืนสำเร็จ');}
-
   renders.loans();
   document.getElementById('lr-amount').value='';
   document.getElementById('lr-note').value='';
   updateLoanSelect();
+  toast(`บันทึกรับเงินคืน ฿${fmt(amount)} สำเร็จ`);
 }
 
 function setLoanType(t){
