@@ -991,8 +991,20 @@ function calcBalance(){
   let income=0,expense=0,payout=0,loanOut=0,repaid=0;
   DB.transactions.forEach(t=>{if(t.type==='income')income+=+t.amount;else expense+=+t.amount;});
   DB.payouts.forEach(p=>payout+=+p.amount);
+  // หักแค่เงินต้น
   DB.loans.filter(l=>l.status==='approved').forEach(l=>{loanOut+=+l.amount;});
-  DB.repayments.forEach(r=>repaid+=+r.amount);
+  // repayment ใหม่มี loanId: นับแค่เงินต้น (ดอกเบี้ยอยู่ใน transactions แล้ว)
+  // repayment เก่าไม่มี loanId: นับเต็ม
+  DB.repayments.forEach(r=>{
+    if(r.loanId){
+      const loan=DB.loans.find(l=>String(l.id)===String(r.loanId));
+      if(loan&&+loan.amount>0){
+        const tot=calcTotal(+loan.amount);
+        const principal=tot>0?Math.round((+r.amount/tot)*(+loan.amount)*100)/100:+r.amount;
+        repaid+=principal;
+      }else{repaid+=+r.amount;}
+    }else{repaid+=+r.amount;}
+  });
   return{income,expense,payout,loanOut,repaid,balance:income-expense-payout-loanOut+repaid};
 }
 function updateSidebar(){
@@ -1373,11 +1385,30 @@ function addRepay(){
   const row={id:Date.now(),date:dateVal,member,loanId,amount,note:autoNote};
   DB.repayments.push(row);
   saveRow('repayments',row);
+
+  // แยกดอกเบี้ยบันทึกเข้า transactions อัตโนมัติ
+  if(loan&&+loan.amount>0){
+    const tot=calcTotal(+loan.amount);
+    const interestPortion=tot>0?Math.round((amount/tot)*calcInterest(+loan.amount)*100)/100:0;
+    if(interestPortion>0){
+      const interestTx={
+        id:Date.now()+1,
+        date:dateVal,
+        type:'income',
+        amount:interestPortion,
+        category:'ดอกเบี้ยกู้ยืม',
+        note:`ดอกเบี้ย ${mName(member)} · ${loanLabel}`
+      };
+      DB.transactions.push(interestTx);
+      saveRow('transactions',interestTx);
+      toast(`บันทึกรับเงินคืน ฿${fmt(amount)} · ดอกเบี้ย ฿${fmt(interestPortion)} เข้ารายรับแล้ว`,3500);
+    }else{toast('บันทึกรับเงินคืนสำเร็จ');}
+  }else{toast('บันทึกรับเงินคืนสำเร็จ');}
+
   renders.loans();
   document.getElementById('lr-amount').value='';
   document.getElementById('lr-note').value='';
   updateLoanSelect();
-  toast(`บันทึกรับเงินคืน ฿${fmt(amount)} สำเร็จ`);
 }
 
 function setLoanType(t){
