@@ -1183,7 +1183,7 @@ const renders={
       {l:'กู้คงค้าง',v:'฿'+fmt(Math.max(0,loanOut-repaid)),c:'amber',i:'📄'},
     ].map(c=>`<div class="stat-card"><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
     // transactions
-    const txSorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date));
+    const txSorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
     document.getElementById('report-tx').innerHTML=txSorted.length?txSorted.map(t=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:${t.type==='income'?'var(--green)':'var(--red)'}"></div>
@@ -1191,14 +1191,14 @@ const renders={
       <div class="ri-amount" style="color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // payouts
-    const poSorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date));
+    const poSorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('report-po').innerHTML=poSorted.length?poSorted.map(p=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--blue)"></div>
       <div><div class="ri-label">${mName(p.member)}${p.note?' · '+p.note:''}</div><div class="ri-sub">${fmtDate(p.date)}</div></div></div>
       <div class="ri-amount" style="color:var(--blue)">฿${fmt(p.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // loans
-    const lnSorted=[...DB.loans].sort((a,b)=>b.date.localeCompare(a.date));
+    const lnSorted=[...DB.loans].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('report-loans').innerHTML=lnSorted.length?lnSorted.map(l=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--amber)"></div>
       <div><div class="ri-label">${mName(l.member)} · <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:10px">${TYPE_LABEL[l.loanType]||''}</span></div>
