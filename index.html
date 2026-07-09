@@ -770,14 +770,7 @@ function today(){
   const day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function safeDate(inputId){
-  const el=document.getElementById(inputId);
-  if(!el||!el.value)return today();
-  // Android อาจส่ง value เป็น UTC ทำให้วันเลื่อน ตรวจสอบด้วย today()
-  const val=el.value; // format YYYY-MM-DD
-  if(/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  return today();
-}
+function isAdmin(){return SESSION.role==='superadmin'||SESSION.role==='admin';}
 function isSuperAdmin(){return SESSION.role==='superadmin';}
 function canSee(page){return page.roles.includes('all')||page.roles.includes(SESSION.role);}
 
@@ -1430,9 +1423,7 @@ function checkReturnDate(){
 }
 function addLoan(type){
   const pfx={once:'ln-once','tip-all':'ln-tipall','tip-part':'ln-tippart',daily:'ln-daily',fee:'ln-fee'}[type];
-  const dateEl=document.getElementById(pfx+'-date');
-  const date=dateEl?dateEl.value||today():today();
-  alert('วันที่ที่จะบันทึก: '+date+'\ntoday(): '+today());
+  const date=document.getElementById(pfx+'-date').value||today();
   const member=document.getElementById(pfx+'-member').value;
   const amount=+document.getElementById(pfx+'-amount').value;
   const reasonEl=document.getElementById(pfx+'-reason');
