@@ -1149,7 +1149,7 @@ const renders={
     const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
       let extra='';
-      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:11px;color:var(--text3)">คืน ${fmtDate(l.returnDate)}</span>`;
+      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:12px;color:var(--red);font-weight:500">📆 กำหนดคืน ${fmtDate(l.returnDate)}</span>`;
       if(l.loanType==='daily'&&l.dailyRate)extra=`<br><span style="font-size:11px;color:var(--text3)">วันละ ${fmt(l.dailyRate)}</span>`;
       return`<tr>
         <td data-label="วันที่">${fmtDate(l.date)}</td>
@@ -1204,7 +1204,9 @@ const renders={
       <div><div class="ri-label">${mName(l.member)} · <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:10px">${TYPE_LABEL[l.loanType]||''}</span></div>
       <div class="ri-sub">${fmtDate(l.date)} · ${l.reason||''}</div></div></div>
       <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</div>
-      <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span></div></div>`)
+      <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span>
+      ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red);margin-top:2px">📆 คืน ${fmtDate(l.returnDate)}</div>`:''}
+      </div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // members — แสดงยอดคงค้างแยกตามประเภทการกู้
     const rMap={};DB.repayments.forEach(r=>{rMap[r.member]=(rMap[r.member]||0)+(+r.amount);});
