@@ -764,7 +764,19 @@ function fmtDate(d){
     return `${String(day).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${y+543}`;
   }catch(e){return String(d);}
 }
-function fmtDateShare(d){return fmtDate(d);}
+function fmtDateShare(d){
+  if(!d||d===''||d==='-')return'-';
+  try{
+    const s=String(d).trim();
+    let y,mo,day;
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+      const p=s.substring(0,10).split('-');
+      y=+p[0];mo=+p[1];day=+p[2];
+    } else return fmtDate(d);
+    if(!y||!mo||!day)return s;
+    return `${String(day).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${y+543}`;
+  }catch(e){return String(d);}
+}
 
 function today(){
   const d=new Date();
