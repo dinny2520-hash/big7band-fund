@@ -764,6 +764,13 @@ function fmtDate(d){
     return `${String(day).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${y+543}`;
   }catch(e){return String(d);}
 }
+// บวก 1 วันให้ date string เพื่อ compensate Android UTC offset
+function fixD(val){
+  if(!val||!/^\d{4}-\d{2}-\d{2}$/.test(val))return val;
+  const[y,m,d]=val.split('-').map(Number);
+  const dt=new Date(y,m-1,d+1);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
 function fmtDateShare(d){
   if(!d||d===''||d==='-')return'-';
   try{
@@ -1273,7 +1280,7 @@ function txCatChange(){
   document.getElementById('tx-cat-other-wrap').style.display=v==='อื่นๆ (ระบุเอง)'?'block':'none';
 }
 function addTransaction(){
-  const date=document.getElementById('tx-date').value||today();
+  const date=fixD(document.getElementById('tx-date').value)||today();
   const type=document.getElementById('tx-type').value;
   const catSel=document.getElementById('tx-cat-select').value;
   const category=catSel==='อื่นๆ (ระบุเอง)'?document.getElementById('tx-cat-other').value.trim():catSel;
@@ -1287,7 +1294,7 @@ function addTransaction(){
   toast('บันทึกรายการสำเร็จ');
 }
 function addPayout(){
-  const date=document.getElementById('po-date').value||today();
+  const date=fixD(document.getElementById('po-date').value)||today();
   const member=document.getElementById('po-member').value;
   const amount=+document.getElementById('po-amount').value;
   const note=document.getElementById('po-note').value.trim();
@@ -1375,7 +1382,7 @@ function showOutstanding(){
   if(amtEl&&remaining>0) amtEl.value=remaining;
 }
 function addRepay(){
-  const dateVal=document.getElementById('lr-date').value||today();
+  const dateVal=fixD(document.getElementById('lr-date').value)||today();
   const member=document.getElementById('lr-member').value;
   const loanSel=document.getElementById('lr-loan-select');
   const loanId=loanSel?String(loanSel.value):'';
@@ -1438,7 +1445,7 @@ function checkReturnDate(){
 }
 function addLoan(type){
   const pfx={once:'ln-once','tip-all':'ln-tipall','tip-part':'ln-tippart',daily:'ln-daily',fee:'ln-fee'}[type];
-  const date=document.getElementById(pfx+'-date').value||today();
+  const date=fixD(document.getElementById(pfx+'-date').value)||today();
   const member=document.getElementById(pfx+'-member').value;
   const amount=+document.getElementById(pfx+'-amount').value;
   const reasonEl=document.getElementById(pfx+'-reason');
@@ -1455,8 +1462,15 @@ function addLoan(type){
   const ok=confirm(`ยืนยันการกู้เงิน\n\nเงินต้น: ฿${fmt(amount)}\nดอกเบี้ย 2%: ฿${fmt(interest)}\nยอดที่ต้องคืน: ฿${fmt(totalReturn)}`);
   if(!ok)return;
   const loan={id:Date.now(),date,member,amount,interest,totalReturn,reason,loanType:type,status:'pending',approvedBy:'',returnDate:'',dailyRate:'',startDate:''};
-  if(type==='once')loan.returnDate=document.getElementById('ln-once-return').value||'';
-  if(type==='daily'){loan.dailyRate=+document.getElementById('ln-daily-rate').value;loan.startDate=document.getElementById('ln-daily-start').value||'';}
+  if(type==='once'){
+    const retVal=document.getElementById('ln-once-return').value||'';
+    loan.returnDate=retVal?fixD(retVal):'';
+  }
+  if(type==='daily'){
+    loan.dailyRate=+document.getElementById('ln-daily-rate').value;
+    const startVal=document.getElementById('ln-daily-start').value||'';
+    loan.startDate=startVal?fixD(startVal):'';
+  }
   DB.loans.push(loan);renders.loans();updateSidebar();saveRow('loans',loan);
   document.getElementById(pfx+'-amount').value='';if(reasonEl)reasonEl.value='';
   toast('ยื่นคำร้องสำเร็จ — รอผู้ดูแลพิจารณา');
