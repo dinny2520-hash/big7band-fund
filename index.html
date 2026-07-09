@@ -740,7 +740,7 @@ const ALL_PAGES=[
 function mName(id){const m=MEMBERS.find(x=>x.id===id);return m?m.name:'-';}
 function mInit(id){const m=MEMBERS.find(x=>x.id===id);return m?m.initials:'??';}
 function fmt(n){return Number(n||0).toLocaleString('th-TH');}
-// fmtDate — บวก 1 วันเพื่อ compensate Android UTC offset
+// fmtDate — แสดงวันที่ตรงๆ ไม่บวก/ลบ (fixD จัดการตอนบันทึกแล้ว)
 function fmtDate(d){
   if(!d||d===''||d==='-')return'-';
   try{
@@ -752,9 +752,6 @@ function fmtDate(d){
     } else if(/^\d{4}-\d{2}-\d{2}/.test(s)){
       const p=s.substring(0,10).split('-');
       y=+p[0];mo=+p[1];day=+p[2];
-      // บวก 1 วัน เพราะ input date บน Android ส่งค่าเป็น UTC ทำให้ผิด 1 วัน
-      const dt=new Date(y,mo-1,day+1);
-      y=dt.getFullYear();mo=dt.getMonth()+1;day=dt.getDate();
     } else if(/^\d{2}-\d{2}-\d{4}/.test(s)){
       const p=s.split('-');day=+p[0];mo=+p[1];y=+p[2];
     } else if(/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)){
