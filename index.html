@@ -1538,12 +1538,13 @@ function confirmApprove(forceAction){
 
 // ===== SETTINGS =====
 function loadVenues(){
-  const saved=localStorage.getItem('b7venues');
-  if(saved)DB.venues=JSON.parse(saved);
-  renderVenueSelect();
-  renderVenueList();
+  apiCall({action:'getVenues'}).then(d=>{
+    if(d.venues) DB.venues=d.venues;
+    renderVenueSelect();
+    renderVenueList();
+  }).catch(()=>{});
 }
-function saveVenues(){localStorage.setItem('b7venues',JSON.stringify(DB.venues));}
+function saveVenues(){}
 function renderVenueSelect(){
   const sel=document.getElementById('ln-fee-reason');
   if(!sel)return;
@@ -1562,12 +1563,17 @@ function addVenue(){
   const name=inp?inp.value.trim():'';
   if(!name){alert('กรุณาใส่ชื่อสถานที่');return;}
   if(DB.venues.includes(name)){alert('มีสถานที่นี้แล้ว');return;}
-  DB.venues.push(name);saveVenues();renderVenueSelect();renderVenueList();
+  DB.venues.push(name);
+  apiCall({action:'addVenue',name});
+  renderVenueSelect();renderVenueList();
   if(inp)inp.value='';toast('เพิ่มสถานที่สำเร็จ');
 }
 function removeVenue(i){
   if(!confirm('ลบสถานที่นี้?'))return;
-  DB.venues.splice(i,1);saveVenues();renderVenueSelect();renderVenueList();
+  const name=DB.venues[i];
+  DB.venues.splice(i,1);
+  apiCall({action:'removeVenue',name});
+  renderVenueSelect();renderVenueList();
   toast('ลบสถานที่สำเร็จ');
 }
 function changePwd(who){
