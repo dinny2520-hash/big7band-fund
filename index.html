@@ -1576,7 +1576,12 @@ function addMember(){
   const initials=initEl?initEl.value.trim():'';
   if(!name){alert('กรุณาใส่ชื่อ-นามสกุล');return;}
   if(!initials){alert('กรุณาใส่ชื่อย่อ');return;}
-  const id='m'+(Date.now());
+  // หา id ถัดไป เช่น m7, m8...
+  const maxNum=MEMBERS.reduce((max,m)=>{
+    const n=parseInt(m.id.replace('m',''));
+    return isNaN(n)?max:Math.max(max,n);
+  },0);
+  const id='m'+(maxNum+1);
   const member={id,name,initials};
   MEMBERS.push(member);
   apiCall({action:'addMember',id,name,initials});
