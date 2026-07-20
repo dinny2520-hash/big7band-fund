@@ -734,7 +734,6 @@ let MEMBERS=[
   {id:'m3',name:'วุฒิสันต์ จันทร์แฝง',initials:'วจ'},
   {id:'m4',name:'ปกรณ์ โชติช่วง',initials:'ปช'},
   {id:'m5',name:'ชัยณรงค์ เรียบร้อย',initials:'ชร'},
-  {id:'m6',name:'ภูเบศ ขิงชัย',initials:'ภข'},
 ];
 const TYPE_LABEL={once:'คืนครั้งเดียว','tip-all':'หักทิปทั้งหมด','tip-part':'หักทิปบางส่วน',daily:'หักรายวัน',fee:'หักค่าตัว'};
 const TYPE_BADGE={once:'badge-once','tip-all':'badge-tip-all','tip-part':'badge-tip-part',daily:'badge-daily',fee:'badge-fee'};
@@ -1797,10 +1796,18 @@ function initDates(){
   });
 }
 
-// start - แสดง login ทันทีเลย ไม่รอ Sheet
+// start - แสดง login ทันทีเลย ไม่รอ Sheet (ใช้ค่า fallback ไปก่อน)
 populateSelects();
 document.getElementById('loading-screen').style.display='none';
 document.getElementById('login-screen').style.display='flex';
+
+// ดึงรายชื่อสมาชิกจริงจากชีตทันที เพื่ออัปเดต dropdown login ให้ตรงกับปัจจุบัน
+apiCall({action:'getMembers'}).then(d=>{
+  if(d.members&&d.members.length>0){
+    MEMBERS=d.members;
+    populateSelects();
+  }
+}).catch(()=>{});
 
 // โหลด Sheet ใน background หลัง login screen แสดงแล้ว
 loadDB().then(()=>{
