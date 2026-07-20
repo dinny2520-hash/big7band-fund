@@ -643,6 +643,15 @@ tbody tr:last-child td{border-bottom:none}
     <div id="page-settings" class="page">
       <div class="page-header"><div class="page-title">ตั้งค่าระบบ</div><div class="page-sub">เฉพาะ ชิษณุพงศ์</div></div>
       <div class="card" id="venue-settings-wrap">
+        <div class="card-title"><span class="card-dot"></span>👥 จัดการสมาชิก</div>
+        <div class="form-grid" style="margin-bottom:10px">
+          <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" id="new-member-name" placeholder="เช่น สมชาย ใจดี"></div>
+          <div class="field"><label>ชื่อย่อ (2 ตัว)</label><input type="text" id="new-member-initials" placeholder="สจ" maxlength="2"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addMember()">+ เพิ่มสมาชิก</button></div>
+        <div id="member-manage-list" style="margin-top:12px"></div>
+      </div>
+      <div class="card" id="venue-settings-wrap">
         <div class="card-title"><span class="card-dot"></span>🏠 จัดการสถานที่ (หักค่าตัว)</div>
         <div class="form-grid" style="margin-bottom:10px">
           <div class="field"><label>ชื่อสถานที่ใหม่</label>
@@ -719,7 +728,7 @@ tbody tr:last-child td{border-bottom:none}
 
 // ===== CONFIG =====
 const API='https://script.google.com/macros/s/AKfycbyLzq2sbEOsoOqZ4snQcsWF5WzJwD8ign3DNXI3KBb0_iAjPPdaLiHDtH9LNCJcFNax/exec';
-const MEMBERS=[
+let MEMBERS=[
   {id:'m1',name:'ชิษณุพงศ์ สาริกา',initials:'ชส'},
   {id:'m2',name:'กฤษติญา เทพธานี',initials:'กท'},
   {id:'m3',name:'วุฒิสันต์ จันทร์แฝง',initials:'วจ'},
@@ -967,7 +976,8 @@ function startApp(){
   document.getElementById('sb-role').textContent=SESSION.role==='superadmin'?'Super Admin':SESSION.role==='admin'?'Admin':'สมาชิก';
   buildNav();
   populateSelects();
-  loadVenues(); // เรียกหลัง SESSION set แล้ว เพื่อกำหนด loan member ถูกต้อง
+  loadVenues();
+  loadMembers(); // เรียกหลัง SESSION set แล้ว เพื่อกำหนด loan member ถูกต้อง
   initDates();
   applyRoleUI();
   go('dashboard');
@@ -1537,6 +1547,50 @@ function confirmApprove(forceAction){
 }
 
 // ===== SETTINGS =====
+function loadMembers(){
+  apiCall({action:'getMembers'}).then(d=>{
+    if(d.members&&d.members.length>0){
+      MEMBERS=d.members;
+      populateSelects();
+    }
+    renderMemberManageList();
+  }).catch(()=>{renderMemberManageList();});
+}
+function renderMemberManageList(){
+  const el=document.getElementById('member-manage-list');
+  if(!el)return;
+  if(!MEMBERS.length){el.innerHTML='<div style="color:var(--text3);font-size:13px">ยังไม่มีสมาชิก</div>';return;}
+  el.innerHTML=MEMBERS.map((m,i)=>`
+    <div class="ri">
+      <div class="ri-l">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--bg4);border:2px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent)">${m.initials}</div>
+        <div class="ri-label">${m.name}</div>
+      </div>
+      ${m.id!=='m1'&&m.id!=='m2'?`<button class="btn-del" onclick="removeMember('${m.id}')">🗑</button>`:'<span style="font-size:11px;color:var(--text3)">Admin</span>'}
+    </div>`).join('');
+}
+function addMember(){
+  const nameEl=document.getElementById('new-member-name');
+  const initEl=document.getElementById('new-member-initials');
+  const name=nameEl?nameEl.value.trim():'';
+  const initials=initEl?initEl.value.trim():'';
+  if(!name){alert('กรุณาใส่ชื่อ-นามสกุล');return;}
+  if(!initials){alert('กรุณาใส่ชื่อย่อ');return;}
+  const id='m'+(Date.now());
+  const member={id,name,initials};
+  MEMBERS.push(member);
+  apiCall({action:'addMember',id,name,initials});
+  populateSelects();renderMemberManageList();
+  if(nameEl)nameEl.value='';if(initEl)initEl.value='';
+  toast('เพิ่มสมาชิกสำเร็จ');
+}
+function removeMember(id){
+  if(!confirm('ลบสมาชิกนี้? ประวัติยังคงอยู่ครับ'))return;
+  MEMBERS=MEMBERS.filter(m=>m.id!==id);
+  apiCall({action:'removeMember',id});
+  populateSelects();renderMemberManageList();
+  toast('ลบสมาชิกสำเร็จ');
+}
 function loadVenues(){
   apiCall({action:'getVenues'}).then(d=>{
     if(d.venues) DB.venues=d.venues;
