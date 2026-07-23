@@ -734,6 +734,7 @@ let MEMBERS=[
   {id:'m3',name:'วุฒิสันต์ จันทร์แฝง',initials:'วจ'},
   {id:'m4',name:'ปกรณ์ โชติช่วง',initials:'ปช'},
   {id:'m5',name:'ชัยณรงค์ เรียบร้อย',initials:'ชร'},
+  {id:'m6',name:'ภูเบศ ขิงชัย',initials:'ภข'},
 ];
 const TYPE_LABEL={once:'คืนครั้งเดียว','tip-all':'หักทิปทั้งหมด','tip-part':'หักทิปบางส่วน',daily:'หักรายวัน',fee:'หักค่าตัว'};
 const TYPE_BADGE={once:'badge-once','tip-all':'badge-tip-all','tip-part':'badge-tip-part',daily:'badge-daily',fee:'badge-fee'};
@@ -1086,7 +1087,7 @@ const renders={
     const labels={income:'รายรับ',expense:'รายจ่าย',payout:'จ่ายสมาชิก',loan:'กู้เงิน'};
     document.getElementById('recent-items').innerHTML=all.length?all.map(r=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:${colors[r.type]}"></div>
-      <div><div class="ri-label">${r.label}</div><div class="ri-sub">${fmtDate(r.date)} · ${labels[r.type]}</div></div></div>
+      <div><div class="ri-label">${r.label}</div><div class="ri-sub">${fmtDateShare(r.date)} · ${labels[r.type]}</div></div></div>
       <div class="ri-amount" style="color:${colors[r.type]}">฿${fmt(r.amount)}</div></div>`).join('')
       :'<div style="text-align:center;padding:24px;color:var(--text3)">ยังไม่มีรายการ</div>';
 
@@ -1132,8 +1133,8 @@ const renders={
     if(!pending.length){wrap.innerHTML=`<div class="empty-state"><div class="icon">✅</div><p>ไม่มีคำร้องรอพิจารณา</p></div>`;return;}
     wrap.innerHTML=pending.map(l=>{
       let extra='';
-      if(l.loanType==='once'&&l.returnDate)extra=`<div class="ac-meta-item">📆 คืน: <span>${fmtDate(l.returnDate)}</span></div>`;
-      if(l.loanType==='daily'&&l.dailyRate)extra=`<div class="ac-meta-item">📊 วันละ: <span>฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</span></div>`;
+      if(l.loanType==='once'&&l.returnDate)extra=`<div class="ac-meta-item">📆 คืน: <span>${fmtDateShare(l.returnDate)}</span></div>`;
+      if(l.loanType==='daily'&&l.dailyRate)extra=`<div class="ac-meta-item">📊 วันละ: <span>฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}</span></div>`;
       return`<div class="approval-card">
         <div class="ac-member"><div style="width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1.5px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0">${mInit(l.member)}</div>${mName(l.member)}</div>
         <div class="ac-amount">
@@ -1144,7 +1145,7 @@ const renders={
           <div style="font-size:13px;color:var(--text2)">ยอดต้องคืน: <span style="color:var(--green);font-weight:600;font-family:'Kanit',sans-serif">฿${fmt(calcTotal(+l.amount))}</span></div>
         </div>
         <div class="ac-meta">
-          <div class="ac-meta-item">📅 <span>${fmtDate(l.date)}</span></div>
+          <div class="ac-meta-item">📅 <span>${fmtDateShare(l.date)}</span></div>
           <div class="ac-meta-item">🏷 <span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||''}</span></div>
           ${extra}
         </div>
@@ -1161,7 +1162,7 @@ const renders={
   transactions(){
     const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('tx-list').innerHTML=sorted.length?sorted.map(t=>`<tr>
-      <td data-label="วันที่">${fmtDate(t.date)}</td>
+      <td data-label="วันที่">${fmtDateShare(t.date)}</td>
       <td data-label="ประเภท"><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
       <td data-label="หมวด">${t.category||'-'}</td>
       <td data-label="หมายเหตุ" style="color:var(--text3)">${t.note||'-'}</td>
@@ -1173,7 +1174,7 @@ const renders={
   payouts(){
     const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('po-list').innerHTML=sorted.length?sorted.map(p=>`<tr>
-      <td data-label="วันที่">${fmtDate(p.date)}</td>
+      <td data-label="วันที่">${fmtDateShare(p.date)}</td>
       <td data-label="สมาชิก">${mName(p.member)}</td>
       <td data-label="รายละเอียด" style="color:var(--text3)">${p.note||'-'}</td>
       <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--blue)">฿${fmt(p.amount)}</td>
@@ -1186,10 +1187,10 @@ const renders={
     const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
       let extra='';
-      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:12px;color:var(--red);font-weight:500">📆 กำหนดคืน ${fmtDate(l.returnDate)}</span>`;
+      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:12px;color:var(--red);font-weight:500">📆 กำหนดคืน ${fmtDateShare(l.returnDate)}</span>`;
       if(l.loanType==='daily'&&l.dailyRate)extra=`<br><span style="font-size:11px;color:var(--text3)">วันละ ${fmt(l.dailyRate)}</span>`;
       return`<tr>
-        <td data-label="วันที่">${fmtDate(l.date)}</td>
+        <td data-label="วันที่">${fmtDateShare(l.date)}</td>
         <td data-label="สมาชิก">${mName(l.member)}</td>
         <td data-label="ประเภท"><span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||'-'}</span>${extra}</td>
         <td data-label="เหตุผล" style="color:var(--text3)">${l.reason||'-'}</td>
@@ -1203,7 +1204,7 @@ const renders={
     }).join(''):'<tr class="empty-row"><td colspan="8">ยังไม่มีรายการ</td></tr>';
     const rsorted=[...DB.repayments].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('lr-list').innerHTML=rsorted.length?rsorted.map(r=>`<tr>
-      <td data-label="วันที่">${fmtDate(r.date)}</td>
+      <td data-label="วันที่">${fmtDateShare(r.date)}</td>
       <td data-label="สมาชิก">${mName(r.member)}</td>
       <td data-label="หมายเหตุ" style="color:var(--text3)">${r.note||'-'}</td>
       <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--green)">฿${fmt(r.amount)}</td>
@@ -1224,14 +1225,14 @@ const renders={
     const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
     document.getElementById('report-tx').innerHTML=txSorted.length?txSorted.map(t=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:${t.type==='income'?'var(--green)':'var(--red)'}"></div>
-      <div><div class="ri-label">${t.category||'-'}${t.note?' · '+t.note:''}</div><div class="ri-sub">${fmtDate(t.date)}</div></div></div>
+      <div><div class="ri-label">${t.category||'-'}${t.note?' · '+t.note:''}</div><div class="ri-sub">${fmtDateShare(t.date)}</div></div></div>
       <div class="ri-amount" style="color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // payouts
     const poSorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('report-po').innerHTML=poSorted.length?poSorted.map(p=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--blue)"></div>
-      <div><div class="ri-label">${mName(p.member)}${p.note?' · '+p.note:''}</div><div class="ri-sub">${fmtDate(p.date)}</div></div></div>
+      <div><div class="ri-label">${mName(p.member)}${p.note?' · '+p.note:''}</div><div class="ri-sub">${fmtDateShare(p.date)}</div></div></div>
       <div class="ri-amount" style="color:var(--blue)">฿${fmt(p.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // loans
@@ -1239,10 +1240,10 @@ const renders={
     document.getElementById('report-loans').innerHTML=lnSorted.length?lnSorted.map(l=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--amber)"></div>
       <div><div class="ri-label">${mName(l.member)} · <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:10px">${TYPE_LABEL[l.loanType]||''}</span></div>
-      <div class="ri-sub">${fmtDate(l.date)} · ${l.reason||''}</div></div></div>
+      <div class="ri-sub">${fmtDateShare(l.date)} · ${l.reason||''}</div></div></div>
       <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</div>
       <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span>
-      ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red);margin-top:2px">📆 คืน ${fmtDate(l.returnDate)}</div>`:''}
+      ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red);margin-top:2px">📆 คืน ${fmtDateShare(l.returnDate)}</div>`:''}
       </div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // members — แสดงยอดคงค้างแยกตามประเภทการกู้
@@ -1274,9 +1275,9 @@ const renders={
             <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:11px">${TYPE_LABEL[l.loanType]||''}</span>
             <span style="font-weight:600;color:var(--red)">฿${fmt(remaining)}</span>
           </div>
-          <div style="font-size:12px;color:var(--text3)">${fmtDate(l.date)}${l.reason?' · '+l.reason:''}</div>
-          ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDate(l.returnDate)}</div>`:''}
-          ${l.loanType==='daily'&&l.dailyRate?`<div style="font-size:11px;color:var(--green)">หักวันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</div>`:''}
+          <div style="font-size:12px;color:var(--text3)">${fmtDateShare(l.date)}${l.reason?' · '+l.reason:''}</div>
+          ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDateShare(l.returnDate)}</div>`:''}
+          ${l.loanType==='daily'&&l.dailyRate?`<div style="font-size:11px;color:var(--green)">หักวันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}</div>`:''}
         </div>`;
       }).join('');
       return`<div class="member-card" style="text-align:left">
@@ -1360,7 +1361,7 @@ function updateLoanSelect(){
     const tot=+(l.totalReturn||calcTotal(+l.amount));
     const paid=rByLoan[String(l.id)]||0;
     const remaining=tot-paid;
-    return`<option value="${l.id}" data-remaining="${remaining}">${TYPE_LABEL[l.loanType]} · คงเหลือ ฿${fmt(remaining)} · ${fmtDate(l.date)}</option>`;
+    return`<option value="${l.id}" data-remaining="${remaining}">${TYPE_LABEL[l.loanType]} · คงเหลือ ฿${fmt(remaining)} · ${fmtDateShare(l.date)}</option>`;
   }).join('');
   wrap.style.display='block';
   showOutstanding();
@@ -1516,8 +1517,8 @@ function openApproveModal(id,action){
   pendingApprovalId=id;pendingApprovalAction=action;
   document.getElementById('approve-modal-title').textContent=action==='approve'?'ยืนยันการอนุมัติ':'ยืนยันการไม่อนุมัติ';
   let extra='';
-  if(l.loanType==='once'&&l.returnDate)extra+=`<div class="modal-info-row"><span class="k">กำหนดคืน</span><span class="v">${fmtDate(l.returnDate)}</span></div>`;
-  if(l.loanType==='daily'&&l.dailyRate)extra+=`<div class="modal-info-row"><span class="k">หักรายวัน</span><span class="v">฿${fmt(l.dailyRate)} · เริ่ม ${fmtDate(l.startDate)}</span></div>`;
+  if(l.loanType==='once'&&l.returnDate)extra+=`<div class="modal-info-row"><span class="k">กำหนดคืน</span><span class="v">${fmtDateShare(l.returnDate)}</span></div>`;
+  if(l.loanType==='daily'&&l.dailyRate)extra+=`<div class="modal-info-row"><span class="k">หักรายวัน</span><span class="v">฿${fmt(l.dailyRate)} · เริ่ม ${fmtDateShare(l.startDate)}</span></div>`;
   document.getElementById('approve-modal-info').innerHTML=`
     <div class="modal-info-row"><span class="k">สมาชิก</span><span class="v">${mName(l.member)}</span></div>
     <div class="modal-info-row"><span class="k">ประเภท</span><span class="v">${TYPE_LABEL[l.loanType]||'-'}</span></div>
@@ -1720,7 +1721,7 @@ function buildShareText(l){
     `📌 สถานะ: ${l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'}`,
   ];
   if(l.loanType==='once'&&l.returnDate)lines.push(`📆 กำหนดคืน: ${fmtDateShare(l.returnDate)}`);
-  if(l.loanType==='daily'&&l.dailyRate)lines.push(`📊 หักรายวัน: วันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}`);
+  if(l.loanType==='daily'&&l.dailyRate)lines.push(`📊 หักรายวัน: วันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}`);
   if(l.approvedBy)lines.push(`✅ ผู้อนุมัติ: ${l.approvedBy}`);
   lines.push('━━━━━━━━━━━━━━━━');
   return lines.join('\n');
@@ -1743,7 +1744,7 @@ function drawCanvas(l){
     ['เหตุผล',l.reason||'-'],
     ['สถานะ',l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ']];
   if(l.loanType==='once'&&l.returnDate)rows.push(['กำหนดคืน',fmtDateShare(l.returnDate)]);
-  if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDate(l.startDate)]);
+  if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDateShare(l.startDate)]);
   if(l.approvedBy)rows.push(['ผู้อนุมัติ',l.approvedBy]);
   let y=76;
   rows.forEach(([k,v])=>{
@@ -1796,18 +1797,10 @@ function initDates(){
   });
 }
 
-// start - แสดง login ทันทีเลย ไม่รอ Sheet (ใช้ค่า fallback ไปก่อน)
+// start - แสดง login ทันทีเลย ไม่รอ Sheet
 populateSelects();
 document.getElementById('loading-screen').style.display='none';
 document.getElementById('login-screen').style.display='flex';
-
-// ดึงรายชื่อสมาชิกจริงจากชีตทันที เพื่ออัปเดต dropdown login ให้ตรงกับปัจจุบัน
-apiCall({action:'getMembers'}).then(d=>{
-  if(d.members&&d.members.length>0){
-    MEMBERS=d.members;
-    populateSelects();
-  }
-}).catch(()=>{});
 
 // โหลด Sheet ใน background หลัง login screen แสดงแล้ว
 loadDB().then(()=>{
