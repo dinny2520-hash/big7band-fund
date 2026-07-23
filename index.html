@@ -20,7 +20,7 @@
       : '<div style="font-size:15px;color:#f0eeea;margin-bottom:6px;font-weight:600">วิธีเปิดใน Safari</div>'
         +'<div style="font-size:15px;color:#9ca3af;margin-bottom:24px;line-height:2">กด <b style=color:#f0eeea>···</b> มุมขวาบน<br>→ <b style=color:#f0eeea>"เปิดใน Safari"</b></div>'
         +'<button id="cpb" style="width:100%;max-width:300px;padding:16px;background:#f0a500;color:#000;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer">📋 คัดลอก URL ไปเปิดใน Safari</button>';
-    d.innerHTML='<div style="width:72px;height:72px;background:linear-gradient(135deg,#f0a500,#e07b00);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#000;margin-bottom:20px">B7</div>'
+    d.innerHTML='<div style="width:72px;height:72px;border-radius:20px;overflow:hidden;margin-bottom:20px"><img src="logo.png" alt="B7" style="width:100%;height:100%;object-fit:cover"></div>'
       +'<div style="font-size:22px;font-weight:700;color:#f0eeea;margin-bottom:8px">กองทุนวง Big Seven Band</div>'
       +'<div style="font-size:14px;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;margin-bottom:20px">⚠️ ไม่รองรับการเปิดจาก LINE</div>'
       +(isAndroid?'<div style="font-size:16px;color:#9ca3af;margin-bottom:20px">กรุณาเปิดในเบราว์เซอร์ Chrome</div>':'')
@@ -73,7 +73,8 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 /* ===== LOGIN ===== */
 #login-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;background:var(--bg);padding:16px;overflow-y:auto}
 .login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:var(--shadow);margin:auto}
-.login-logo{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;color:#000;margin:0 auto 14px;box-shadow:0 4px 20px rgba(240,165,0,0.35)}
+.login-logo{width:76px;height:76px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 4px 20px rgba(240,165,0,0.25);overflow:hidden;background:#000}
+.login-logo img{width:100%;height:100%;object-fit:cover}
 .login-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:600;margin-bottom:4px}
 .login-sub{font-size:13px;color:var(--text3);margin-bottom:24px}
 .login-tabs{display:flex;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;margin-bottom:18px;gap:4px}
@@ -89,7 +90,8 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .layout{display:flex;min-height:100vh;width:100%}
 .sidebar{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
 .brand{padding:20px 18px 14px;border-bottom:1px solid var(--border)}
-.brand-logo{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:17px;color:#000;margin-bottom:8px}
+.brand-logo{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;background:#000}
+.brand-logo img{width:100%;height:100%;object-fit:cover}
 .brand-name{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px}
 .brand-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .user-badge{margin:10px 10px 0;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:8px}
@@ -376,10 +378,7 @@ tbody tr:last-child td{border-bottom:none}
 <body>
 
 <!-- LOADING OVERLAY -->
-<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;color:#000">B7</div>
-  <div style="font-family:'Kanit',sans-serif;font-size:16px;color:var(--text)">กำลังโหลด...</div>
-</div>
+<div id="loading-screen" style="display:none"></div>
 
 <!-- SYNC BAR -->
 <div id="sync-bar"></div>
@@ -387,7 +386,7 @@ tbody tr:last-child td{border-bottom:none}
 <!-- LOGIN -->
 <div id="login-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px">
   <div class="login-box">
-    <div class="login-logo">B7</div>
+    <div class="login-logo"><img src="logo.png" alt="Big Seven Band"></div>
     <div class="login-title">Big Seven Band</div>
     <div class="login-sub">ระบบกองทุนวง</div>
     <div class="login-tabs">
@@ -417,7 +416,7 @@ tbody tr:last-child td{border-bottom:none}
   <!-- DESKTOP SIDEBAR -->
   <nav class="sidebar">
     <div class="brand">
-      <div class="brand-logo">B7</div>
+      <div class="brand-logo"><img src="logo.png" alt="Big Seven Band"></div>
       <div class="brand-name">Big Seven Band</div>
       <div class="brand-sub">ระบบกองทุนวง</div>
     </div>
@@ -435,7 +434,7 @@ tbody tr:last-child td{border-bottom:none}
 
   <!-- MOBILE TOP BAR -->
   <div class="mobile-topbar">
-    <div class="brand-logo">B7</div>
+    <div class="brand-logo"><img src="logo.png" alt="Big Seven Band"></div>
     <div class="mobile-topbar-title" id="mb-title">ภาพรวม</div>
     <div class="mobile-topbar-balance" id="mb-balance">฿0</div>
     <button class="mobile-logout" onclick="doLogout()">⏏</button>
@@ -645,7 +644,7 @@ tbody tr:last-child td{border-bottom:none}
     <!-- SETTINGS -->
     <div id="page-settings" class="page">
       <div class="page-header"><div class="page-title">ตั้งค่าระบบ</div><div class="page-sub">เฉพาะ ชิษณุพงศ์</div></div>
-      <div class="card" id="member-settings-wrap">
+      <div class="card" id="venue-settings-wrap">
         <div class="card-title"><span class="card-dot"></span>👥 จัดการสมาชิก</div>
         <div class="form-grid" style="margin-bottom:10px">
           <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" id="new-member-name" placeholder="เช่น สมชาย ใจดี"></div>
@@ -664,8 +663,6 @@ tbody tr:last-child td{border-bottom:none}
         <div class="form-actions"><button class="btn btn-primary" style="width:100%" onclick="addVenue()">+ เพิ่มสถานที่</button></div>
         <div id="venue-list" style="margin-top:12px"></div>
       </div>
-      <div class="card">
-        <div class="card-title"><span class="card-dot"></span>รหัสผ่านผู้ดูแล</div>
         <div style="font-size:13px;color:var(--text3);margin-bottom:12px">ชิษณุพงศ์ สาริกา (Super Admin)</div>
         <div class="form-grid form-2">
           <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pwd-admin1"></div>
@@ -1091,7 +1088,7 @@ const renders={
     const labels={income:'รายรับ',expense:'รายจ่าย',payout:'จ่ายสมาชิก',loan:'กู้เงิน'};
     document.getElementById('recent-items').innerHTML=all.length?all.map(r=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:${colors[r.type]}"></div>
-      <div><div class="ri-label">${r.label}</div><div class="ri-sub">${fmtDateShare(r.date)} · ${labels[r.type]}</div></div></div>
+      <div><div class="ri-label">${r.label}</div><div class="ri-sub">${fmtDate(r.date)} · ${labels[r.type]}</div></div></div>
       <div class="ri-amount" style="color:${colors[r.type]}">฿${fmt(r.amount)}</div></div>`).join('')
       :'<div style="text-align:center;padding:24px;color:var(--text3)">ยังไม่มีรายการ</div>';
 
@@ -1137,8 +1134,8 @@ const renders={
     if(!pending.length){wrap.innerHTML=`<div class="empty-state"><div class="icon">✅</div><p>ไม่มีคำร้องรอพิจารณา</p></div>`;return;}
     wrap.innerHTML=pending.map(l=>{
       let extra='';
-      if(l.loanType==='once'&&l.returnDate)extra=`<div class="ac-meta-item">📆 คืน: <span>${fmtDateShare(l.returnDate)}</span></div>`;
-      if(l.loanType==='daily'&&l.dailyRate)extra=`<div class="ac-meta-item">📊 วันละ: <span>฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}</span></div>`;
+      if(l.loanType==='once'&&l.returnDate)extra=`<div class="ac-meta-item">📆 คืน: <span>${fmtDate(l.returnDate)}</span></div>`;
+      if(l.loanType==='daily'&&l.dailyRate)extra=`<div class="ac-meta-item">📊 วันละ: <span>฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</span></div>`;
       return`<div class="approval-card">
         <div class="ac-member"><div style="width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1.5px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0">${mInit(l.member)}</div>${mName(l.member)}</div>
         <div class="ac-amount">
@@ -1149,7 +1146,7 @@ const renders={
           <div style="font-size:13px;color:var(--text2)">ยอดต้องคืน: <span style="color:var(--green);font-weight:600;font-family:'Kanit',sans-serif">฿${fmt(calcTotal(+l.amount))}</span></div>
         </div>
         <div class="ac-meta">
-          <div class="ac-meta-item">📅 <span>${fmtDateShare(l.date)}</span></div>
+          <div class="ac-meta-item">📅 <span>${fmtDate(l.date)}</span></div>
           <div class="ac-meta-item">🏷 <span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||''}</span></div>
           ${extra}
         </div>
@@ -1166,7 +1163,7 @@ const renders={
   transactions(){
     const sorted=[...DB.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('tx-list').innerHTML=sorted.length?sorted.map(t=>`<tr>
-      <td data-label="วันที่">${fmtDateShare(t.date)}</td>
+      <td data-label="วันที่">${fmtDate(t.date)}</td>
       <td data-label="ประเภท"><span class="badge badge-${t.type}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
       <td data-label="หมวด">${t.category||'-'}</td>
       <td data-label="หมายเหตุ" style="color:var(--text3)">${t.note||'-'}</td>
@@ -1178,7 +1175,7 @@ const renders={
   payouts(){
     const sorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('po-list').innerHTML=sorted.length?sorted.map(p=>`<tr>
-      <td data-label="วันที่">${fmtDateShare(p.date)}</td>
+      <td data-label="วันที่">${fmtDate(p.date)}</td>
       <td data-label="สมาชิก">${mName(p.member)}</td>
       <td data-label="รายละเอียด" style="color:var(--text3)">${p.note||'-'}</td>
       <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--blue)">฿${fmt(p.amount)}</td>
@@ -1191,10 +1188,10 @@ const renders={
     const sorted=[...DB.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('ln-list').innerHTML=sorted.length?sorted.map(l=>{
       let extra='';
-      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:12px;color:var(--red);font-weight:500">📆 กำหนดคืน ${fmtDateShare(l.returnDate)}</span>`;
+      if(l.loanType==='once'&&l.returnDate)extra=`<br><span style="font-size:12px;color:var(--red);font-weight:500">📆 กำหนดคืน ${fmtDate(l.returnDate)}</span>`;
       if(l.loanType==='daily'&&l.dailyRate)extra=`<br><span style="font-size:11px;color:var(--text3)">วันละ ${fmt(l.dailyRate)}</span>`;
       return`<tr>
-        <td data-label="วันที่">${fmtDateShare(l.date)}</td>
+        <td data-label="วันที่">${fmtDate(l.date)}</td>
         <td data-label="สมาชิก">${mName(l.member)}</td>
         <td data-label="ประเภท"><span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||'-'}</span>${extra}</td>
         <td data-label="เหตุผล" style="color:var(--text3)">${l.reason||'-'}</td>
@@ -1208,7 +1205,7 @@ const renders={
     }).join(''):'<tr class="empty-row"><td colspan="8">ยังไม่มีรายการ</td></tr>';
     const rsorted=[...DB.repayments].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,20);
     document.getElementById('lr-list').innerHTML=rsorted.length?rsorted.map(r=>`<tr>
-      <td data-label="วันที่">${fmtDateShare(r.date)}</td>
+      <td data-label="วันที่">${fmtDate(r.date)}</td>
       <td data-label="สมาชิก">${mName(r.member)}</td>
       <td data-label="หมายเหตุ" style="color:var(--text3)">${r.note||'-'}</td>
       <td data-label="จำนวน" style="font-family:'Kanit',sans-serif;font-weight:500;color:var(--green)">฿${fmt(r.amount)}</td>
@@ -1229,14 +1226,14 @@ const renders={
     const colors={income:'var(--green)',expense:'var(--red)',payout:'var(--blue)',loan:'var(--amber)'};
     document.getElementById('report-tx').innerHTML=txSorted.length?txSorted.map(t=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:${t.type==='income'?'var(--green)':'var(--red)'}"></div>
-      <div><div class="ri-label">${t.category||'-'}${t.note?' · '+t.note:''}</div><div class="ri-sub">${fmtDateShare(t.date)}</div></div></div>
+      <div><div class="ri-label">${t.category||'-'}${t.note?' · '+t.note:''}</div><div class="ri-sub">${fmtDate(t.date)}</div></div></div>
       <div class="ri-amount" style="color:${t.type==='income'?'var(--green)':'var(--red)'}">฿${fmt(t.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // payouts
     const poSorted=[...DB.payouts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     document.getElementById('report-po').innerHTML=poSorted.length?poSorted.map(p=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--blue)"></div>
-      <div><div class="ri-label">${mName(p.member)}${p.note?' · '+p.note:''}</div><div class="ri-sub">${fmtDateShare(p.date)}</div></div></div>
+      <div><div class="ri-label">${mName(p.member)}${p.note?' · '+p.note:''}</div><div class="ri-sub">${fmtDate(p.date)}</div></div></div>
       <div class="ri-amount" style="color:var(--blue)">฿${fmt(p.amount)}</div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // loans
@@ -1244,10 +1241,10 @@ const renders={
     document.getElementById('report-loans').innerHTML=lnSorted.length?lnSorted.map(l=>`
       <div class="ri"><div class="ri-l"><div class="ri-dot" style="background:var(--amber)"></div>
       <div><div class="ri-label">${mName(l.member)} · <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:10px">${TYPE_LABEL[l.loanType]||''}</span></div>
-      <div class="ri-sub">${fmtDateShare(l.date)} · ${l.reason||''}</div></div></div>
+      <div class="ri-sub">${fmtDate(l.date)} · ${l.reason||''}</div></div></div>
       <div style="text-align:right"><div class="ri-amount" style="color:var(--amber)">฿${fmt(l.totalReturn||calcTotal(+l.amount))}</div>
       <span class="badge badge-${l.status}" style="font-size:10px">${l.status==='pending'?'รอ':l.status==='approved'?'อนุมัติ':'ไม่อนุมัติ'}</span>
-      ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red);margin-top:2px">📆 คืน ${fmtDateShare(l.returnDate)}</div>`:''}
+      ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red);margin-top:2px">📆 คืน ${fmtDate(l.returnDate)}</div>`:''}
       </div></div>`)
       .join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">ยังไม่มีรายการ</div>';
     // members — แสดงยอดคงค้างแยกตามประเภทการกู้
@@ -1279,9 +1276,9 @@ const renders={
             <span class="badge ${TYPE_BADGE[l.loanType]||''}" style="font-size:11px">${TYPE_LABEL[l.loanType]||''}</span>
             <span style="font-weight:600;color:var(--red)">฿${fmt(remaining)}</span>
           </div>
-          <div style="font-size:12px;color:var(--text3)">${fmtDateShare(l.date)}${l.reason?' · '+l.reason:''}</div>
-          ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDateShare(l.returnDate)}</div>`:''}
-          ${l.loanType==='daily'&&l.dailyRate?`<div style="font-size:11px;color:var(--green)">หักวันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}</div>`:''}
+          <div style="font-size:12px;color:var(--text3)">${fmtDate(l.date)}${l.reason?' · '+l.reason:''}</div>
+          ${l.loanType==='once'&&l.returnDate?`<div style="font-size:11px;color:var(--red)">คืน ${fmtDate(l.returnDate)}</div>`:''}
+          ${l.loanType==='daily'&&l.dailyRate?`<div style="font-size:11px;color:var(--green)">หักวันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}</div>`:''}
         </div>`;
       }).join('');
       return`<div class="member-card" style="text-align:left">
@@ -1365,7 +1362,7 @@ function updateLoanSelect(){
     const tot=+(l.totalReturn||calcTotal(+l.amount));
     const paid=rByLoan[String(l.id)]||0;
     const remaining=tot-paid;
-    return`<option value="${l.id}" data-remaining="${remaining}">${TYPE_LABEL[l.loanType]} · คงเหลือ ฿${fmt(remaining)} · ${fmtDateShare(l.date)}</option>`;
+    return`<option value="${l.id}" data-remaining="${remaining}">${TYPE_LABEL[l.loanType]} · คงเหลือ ฿${fmt(remaining)} · ${fmtDate(l.date)}</option>`;
   }).join('');
   wrap.style.display='block';
   showOutstanding();
@@ -1521,8 +1518,8 @@ function openApproveModal(id,action){
   pendingApprovalId=id;pendingApprovalAction=action;
   document.getElementById('approve-modal-title').textContent=action==='approve'?'ยืนยันการอนุมัติ':'ยืนยันการไม่อนุมัติ';
   let extra='';
-  if(l.loanType==='once'&&l.returnDate)extra+=`<div class="modal-info-row"><span class="k">กำหนดคืน</span><span class="v">${fmtDateShare(l.returnDate)}</span></div>`;
-  if(l.loanType==='daily'&&l.dailyRate)extra+=`<div class="modal-info-row"><span class="k">หักรายวัน</span><span class="v">฿${fmt(l.dailyRate)} · เริ่ม ${fmtDateShare(l.startDate)}</span></div>`;
+  if(l.loanType==='once'&&l.returnDate)extra+=`<div class="modal-info-row"><span class="k">กำหนดคืน</span><span class="v">${fmtDate(l.returnDate)}</span></div>`;
+  if(l.loanType==='daily'&&l.dailyRate)extra+=`<div class="modal-info-row"><span class="k">หักรายวัน</span><span class="v">฿${fmt(l.dailyRate)} · เริ่ม ${fmtDate(l.startDate)}</span></div>`;
   document.getElementById('approve-modal-info').innerHTML=`
     <div class="modal-info-row"><span class="k">สมาชิก</span><span class="v">${mName(l.member)}</span></div>
     <div class="modal-info-row"><span class="k">ประเภท</span><span class="v">${TYPE_LABEL[l.loanType]||'-'}</span></div>
@@ -1725,7 +1722,7 @@ function buildShareText(l){
     `📌 สถานะ: ${l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'}`,
   ];
   if(l.loanType==='once'&&l.returnDate)lines.push(`📆 กำหนดคืน: ${fmtDateShare(l.returnDate)}`);
-  if(l.loanType==='daily'&&l.dailyRate)lines.push(`📊 หักรายวัน: วันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDateShare(l.startDate)}`);
+  if(l.loanType==='daily'&&l.dailyRate)lines.push(`📊 หักรายวัน: วันละ ฿${fmt(l.dailyRate)} เริ่ม ${fmtDate(l.startDate)}`);
   if(l.approvedBy)lines.push(`✅ ผู้อนุมัติ: ${l.approvedBy}`);
   lines.push('━━━━━━━━━━━━━━━━');
   return lines.join('\n');
@@ -1748,7 +1745,7 @@ function drawCanvas(l){
     ['เหตุผล',l.reason||'-'],
     ['สถานะ',l.status==='pending'?'รอพิจารณา':l.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ']];
   if(l.loanType==='once'&&l.returnDate)rows.push(['กำหนดคืน',fmtDateShare(l.returnDate)]);
-  if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDateShare(l.startDate)]);
+  if(l.loanType==='daily'&&l.dailyRate)rows.push(['หักรายวัน','วันละ ฿'+fmt(l.dailyRate)+' เริ่ม '+fmtDate(l.startDate)]);
   if(l.approvedBy)rows.push(['ผู้อนุมัติ',l.approvedBy]);
   let y=76;
   rows.forEach(([k,v])=>{
@@ -1801,23 +1798,25 @@ function initDates(){
   });
 }
 
-// start - แสดง login ทันทีเลย ไม่รอ Sheet
-// ซ่อน login ก่อน รอโหลดสมาชิกจาก Sheet แล้วค่อยแสดง
-document.getElementById('login-screen').style.display='none';
-document.getElementById('loading-screen').style.display='flex';
+// start - แสดง login ทันทีเลย ไม่รอ Sheet (ใช้ค่า fallback ไปก่อน)
+populateSelects();
+document.getElementById('loading-screen').style.display='none';
+document.getElementById('login-screen').style.display='flex';
 
+// ดึงรายชื่อสมาชิกจริงจากชีตทันที เพื่ออัปเดต dropdown login ให้ตรงกับปัจจุบัน
 apiCall({action:'getMembers'}).then(d=>{
-  if(d.members&&d.members.length>0) MEMBERS=d.members;
-  populateSelects();
-  document.getElementById('loading-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-}).catch(()=>{
-  populateSelects();
-  document.getElementById('loading-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-});
+  if(d.members&&d.members.length>0){
+    MEMBERS=d.members;
+    populateSelects();
+  }
+}).catch(()=>{});
 
-loadDB().then(()=>startAutoRefresh()).catch(()=>startAutoRefresh());
+// โหลด Sheet ใน background หลัง login screen แสดงแล้ว
+loadDB().then(()=>{
+  startAutoRefresh();
+}).catch(()=>{
+  startAutoRefresh();
+});
 
 // ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
