@@ -376,7 +376,10 @@ tbody tr:last-child td{border-bottom:none}
 <body>
 
 <!-- LOADING OVERLAY -->
-<div id="loading-screen" style="display:none"></div>
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;color:#000">B7</div>
+  <div style="font-family:'Kanit',sans-serif;font-size:16px;color:var(--text)">กำลังโหลด...</div>
+</div>
 
 <!-- SYNC BAR -->
 <div id="sync-bar"></div>
@@ -1800,11 +1803,12 @@ function initDates(){
 }
 
 // start - แสดง login ทันทีเลย ไม่รอ Sheet
-// โหลดสมาชิกจาก Sheet ก่อนแสดงหน้า login
+// ซ่อน login ก่อน รอโหลดสมาชิกจาก Sheet แล้วค่อยแสดง
+document.getElementById('login-screen').style.display='none';
+document.getElementById('loading-screen').style.display='flex';
+
 apiCall({action:'getMembers'}).then(d=>{
-  if(d.members&&d.members.length>0){
-    MEMBERS=d.members;
-  }
+  if(d.members&&d.members.length>0) MEMBERS=d.members;
   populateSelects();
   document.getElementById('loading-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -1814,12 +1818,7 @@ apiCall({action:'getMembers'}).then(d=>{
   document.getElementById('login-screen').style.display='flex';
 });
 
-// โหลด Sheet ใน background
-loadDB().then(()=>{
-  startAutoRefresh();
-}).catch(()=>{
-  startAutoRefresh();
-});
+loadDB().then(()=>startAutoRefresh()).catch(()=>startAutoRefresh());
 
 // ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
