@@ -1800,11 +1800,21 @@ function initDates(){
 }
 
 // start - แสดง login ทันทีเลย ไม่รอ Sheet
-populateSelects();
-document.getElementById('loading-screen').style.display='none';
-document.getElementById('login-screen').style.display='flex';
+// โหลดสมาชิกจาก Sheet ก่อนแสดงหน้า login
+apiCall({action:'getMembers'}).then(d=>{
+  if(d.members&&d.members.length>0){
+    MEMBERS=d.members;
+  }
+  populateSelects();
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}).catch(()=>{
+  populateSelects();
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+});
 
-// โหลด Sheet ใน background หลัง login screen แสดงแล้ว
+// โหลด Sheet ใน background
 loadDB().then(()=>{
   startAutoRefresh();
 }).catch(()=>{
