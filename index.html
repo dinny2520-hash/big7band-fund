@@ -991,7 +991,7 @@ function doLogin(){
     }catch(e){
       done();
       // ไม่ใช่รหัสผิด — เป็นปัญหาเชื่อมต่อ/เซิร์ฟเวอร์ ต้องบอกให้ชัด
-      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ (เซิร์ฟเวอร์ช้า/ล่ม) กรุณาลองใหม่อีกครั้ง';
+      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง ['+(e&&e.name==='AbortError'?'หมดเวลา':(e&&e.message)||'unknown')+']';
       console.error('login fetch',e);
     }
   })();
