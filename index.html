@@ -748,6 +748,19 @@ let DB={transactions:[],payouts:[],loans:[],repayments:[],passwords:{admin1:'123
 let SESSION={role:'',name:'',memberId:''};
 let _refreshing=false;
 let DB_LOADED=false;
+const LS_KEY='b7_db_cache_v1';
+function saveLocalCache(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify({t:Date.now(),transactions:DB.transactions,payouts:DB.payouts,loans:DB.loans,repayments:DB.repayments}));}catch(e){}
+}
+function loadLocalCache(){
+  try{
+    const c=JSON.parse(localStorage.getItem(LS_KEY)||'null');
+    if(!c||!c.transactions)return false;
+    ['transactions','payouts','loans','repayments'].forEach(k=>DB[k]=c[k]||[]);
+    DB_LOADED=true; // ใช้ข้อมูลเก่าไปก่อน แล้วอัปเดตเมื่อเซิร์ฟเวอร์ตอบ
+    return true;
+  }catch(e){return false;}
+}
 let _dbPromise=null;
 
 // ===== NAV CONFIG =====
@@ -866,6 +879,7 @@ async function loadDB(){
     ['transactions','payouts','loans','repayments'].forEach(k=>DB[k]=normalizeRows(d[k]));
     if(d.passwords)DB.passwords=d.passwords;
     DB_LOADED=true;
+    saveLocalCache();
     syncBar(false);
   }catch(e){syncBar(false);console.error('loadDB',e);}
 }
@@ -902,6 +916,7 @@ function startAutoRefresh(){
         });
         DB.repayments=newRepay;
         if(d.passwords)DB.passwords=d.passwords;
+        saveLocalCache();
         const active=document.querySelector('.page.active');
         if(active)renders[active.id.replace('page-','')]&&renders[active.id.replace('page-','')]();
         updateSidebar();
@@ -1851,7 +1866,10 @@ document.getElementById('login-screen').style.display='flex';
 })();
 
 // โหลดข้อมูลหลักเตรียมไว้ 1 ครั้ง (ไม่วนซ้ำ) เพื่อให้ล็อกอินแล้วข้อมูลพร้อมทันที
-_dbPromise=loadDB();
+loadLocalCache();
+_dbPromise=loadDB().then(()=>{
+  if(SESSION.role){const r=renders[currentPage];r&&r();updateSidebar();} // อัปเดตหน้าที่เปิดอยู่เมื่อข้อมูลสดมาถึง
+});
 
 // ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
