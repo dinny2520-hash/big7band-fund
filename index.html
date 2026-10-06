@@ -827,9 +827,15 @@ function syncBar(on){
 }
 
 // ===== API =====
-async function apiCall(body){
-  const res=await fetch(API,{method:'POST',body:JSON.stringify(body)});
-  return res.json();
+async function apiCall(body,timeoutMs=25000){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
+  try{
+    const res=await fetch(API,{method:'POST',body:JSON.stringify(body),signal:ctrl.signal});
+    const text=await res.text();
+    try{return JSON.parse(text);}
+    catch(e){throw new Error('SERVER_BAD_RESPONSE');} // Apps Script ตอบ HTML (เช่น quota เต็ม/สคริปต์ล่ม)
+  }finally{clearTimeout(timer);}
 }
 function normalizeRows(arr){
   return (arr||[]).map(r=>{
@@ -872,8 +878,12 @@ async function deleteSheetRow(sheet,id){
 async function savePasswordToSheet(key,value){
   try{await apiCall({action:'setPassword',key,value});}catch(e){console.error('savePwd',e);}
 }
+let _refreshTimer=null;
+function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 function startAutoRefresh(){
-  setInterval(async()=>{
+  if(_refreshTimer)return; // กันเริ่มซ้ำ — เดิมถูกเรียก 2 ครั้ง ทำให้ยิง getAll ซ้อนกัน
+  _refreshTimer=setInterval(async()=>{
+    if(!SESSION.role||document.hidden)return; // ไม่ล็อกอิน/แท็บถูกซ่อน ไม่ต้องยิง
     if(_refreshing)return;
     _refreshing=true;
     try{
@@ -895,7 +905,7 @@ function startAutoRefresh(){
       }
     }catch(e){}
     _refreshing=false;
-  },15000);
+  },30000);
 }
 
 // ===== LOGIN =====
@@ -915,7 +925,7 @@ function doLogin(){
   function checkCredentials(){
     if(loginMode==='admin'){
       const u=document.getElementById('login-user').value;
-      const p=document.getElementById('login-pass').value;
+      const p=document.getElementById('login-pass').value.trim();
       if(!u){errEl.textContent='กรุณาเลือกชื่อผู้ดูแล';return false;}
       if(u==='ชิษณุพงศ์'&&p===DB.passwords.admin1){
         SESSION={role:'superadmin',name:'ชิษณุพงศ์ สาริกา',memberId:'m1'};return true;
@@ -926,7 +936,7 @@ function doLogin(){
       return false;
     }else{
       const mid=document.getElementById('login-member-name').value;
-      const p=document.getElementById('login-member-pass').value;
+      const p=document.getElementById('login-member-pass').value.trim();
       if(!mid){errEl.textContent='กรุณาเลือกชื่อสมาชิก';return false;}
       if(p===DB.passwords.member){
         const m=MEMBERS.find(x=>x.id===mid);
@@ -944,19 +954,27 @@ function doLogin(){
   // ถ้าไม่ผ่าน ดึงรหัสใหม่จาก Sheet แล้วลองอีกครั้ง
   loginBtn.disabled=true;
   loginBtn.textContent='กำลังตรวจสอบ...';
-  apiCall({action:'getAll'}).then(d=>{
-    if(d.passwords)DB.passwords=d.passwords;
-    loginBtn.disabled=false;
-    loginBtn.textContent='เข้าสู่ระบบ';
-    if(checkCredentials()){startApp();}
-    else{errEl.textContent='รหัสผ่านไม่ถูกต้อง';}
-  }).catch(()=>{
-    loginBtn.disabled=false;
-    loginBtn.textContent='เข้าสู่ระบบ';
-    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
-  });
+  const done=()=>{loginBtn.disabled=false;loginBtn.textContent='เข้าสู่ระบบ';};
+  (async()=>{
+    try{
+      let d=await apiCall({action:'getLoginData'},20000);
+      if(d&&d.error&&/Unknown action/i.test(d.error)) d=await apiCall({action:'getAll'},30000); // backend เก่ายังไม่มี getLoginData
+      if(d&&d.error) throw new Error(d.error);
+      if(d.passwords)DB.passwords=d.passwords;
+      if(d.members&&d.members.length){MEMBERS=d.members;}
+      done();
+      if(checkCredentials()){startApp();}
+      else if(!errEl.textContent){errEl.textContent='รหัสผ่านไม่ถูกต้อง';}
+    }catch(e){
+      done();
+      // ไม่ใช่รหัสผิด — เป็นปัญหาเชื่อมต่อ/เซิร์ฟเวอร์ ต้องบอกให้ชัด
+      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ (เซิร์ฟเวอร์ช้า/ล่ม) กรุณาลองใหม่อีกครั้ง';
+      console.error('login fetch',e);
+    }
+  })();
 }
 function doLogout(){
+  stopAutoRefresh();
   SESSION={role:'',name:'',memberId:''};
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -975,7 +993,7 @@ function startApp(){
   initDates();
   applyRoleUI();
   go('dashboard');
-  startAutoRefresh();
+  loadDB().then(()=>{renders[currentPage]&&renders[currentPage]();updateSidebar();}).finally(startAutoRefresh);
 }
 function applyRoleUI(){
   const admin=isAdmin();
@@ -1760,7 +1778,11 @@ function roundRect(ctx,x,y,w,h,r){
 function populateSelects(){
   const opts=MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   const mlist=document.getElementById('login-member-name');
-  if(mlist)mlist.innerHTML='<option value="">เลือกชื่อสมาชิก</option>'+opts;
+  if(mlist){
+    const keep=mlist.value; // กันการล้างชื่อที่สมาชิกเลือกไว้แล้ว เมื่อรายชื่อโหลดเสร็จทีหลัง
+    mlist.innerHTML='<option value="">เลือกชื่อสมาชิก</option>'+opts;
+    if(keep&&MEMBERS.some(m=>m.id===keep))mlist.value=keep;
+  }
   // admin selects — เลือกได้ทุกคน
   ['po-member','lr-member'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML=opts;
@@ -1796,20 +1818,15 @@ populateSelects();
 document.getElementById('loading-screen').style.display='none';
 document.getElementById('login-screen').style.display='flex';
 
-// ดึงรายชื่อสมาชิกจริงจากชีตทันที เพื่ออัปเดต dropdown login ให้ตรงกับปัจจุบัน
-apiCall({action:'getMembers'}).then(d=>{
-  if(d.members&&d.members.length>0){
-    MEMBERS=d.members;
-    populateSelects();
-  }
-}).catch(()=>{});
-
-// โหลด Sheet ใน background หลัง login screen แสดงแล้ว
-loadDB().then(()=>{
-  startAutoRefresh();
-}).catch(()=>{
-  startAutoRefresh();
-});
+// โหลดรายชื่อสมาชิก+รหัสผ่านแบบเบา (ไม่ดึงข้อมูลการเงินทั้งหมดก่อนล็อกอิน)
+(async()=>{
+  try{
+    let d=await apiCall({action:'getLoginData'},20000);
+    if(d&&d.error&&/Unknown action/i.test(d.error)) d=await apiCall({action:'getMembers'},20000);
+    if(d&&d.passwords)DB.passwords=d.passwords;
+    if(d&&d.members&&d.members.length>0){MEMBERS=d.members;populateSelects();}
+  }catch(e){console.error('preload login data',e);}
+})();
 
 // ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
