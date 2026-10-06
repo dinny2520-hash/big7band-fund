@@ -50,8 +50,14 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>กองทุนวง Big Seven Band</title>
+<!-- เตรียมเชื่อมต่อล่วงหน้า (ลดเวลาบนเน็ตมือถือ) -->
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- ฟอนต์โหลดแบบไม่บล็อก: ไม่ให้สคริปต์แอปต้องรอฟอนต์ -->
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e29;--bg4:#20263a;
@@ -423,7 +429,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="user-badge">
       <div class="user-dot"></div>
       <div class="user-info"><div class="user-name" id="sb-username">-</div><div class="user-role" id="sb-role">-</div></div>
-      <button class="logout-btn" onclick="doLogout()">⏏</button>
+      <button class="logout-btn" onclick="refreshData(true)" title="รีเฟรช">🔄</button><button class="logout-btn" onclick="doLogout()">⏏</button>
     </div>
     <div class="nav" id="desktop-nav"></div>
     <div class="sidebar-balance">
@@ -437,6 +443,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="brand-logo"><img src="logo.png" alt="Big Seven Band"></div>
     <div class="mobile-topbar-title" id="mb-title">ภาพรวม</div>
     <div class="mobile-topbar-balance" id="mb-balance">฿0</div>
+    <button class="mobile-logout" onclick="refreshData(true)" title="รีเฟรช">🔄</button>
     <button class="mobile-logout" onclick="doLogout()">⏏</button>
   </div>
 
@@ -843,11 +850,14 @@ function syncBar(on){
 
 // ===== API =====
 async function apiCall(body,timeoutMs=25000){
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
+  // ตั้ง timeout ด้วย Promise.race (ไม่ใช้ AbortController เพราะบางเบราว์เซอร์/WebView ส่ง signal ผ่านไม่ได้)
+  let timer;
+  const timeout=new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('TIMEOUT')),timeoutMs);});
   try{
-    const res=await fetch(API,{method:'POST',body:JSON.stringify(body),signal:ctrl.signal});
-    const text=await res.text();
+    const req=fetch(API,{method:'POST',body:JSON.stringify(body)});
+    req.catch(()=>{});
+    const res=await Promise.race([req,timeout]);
+    const text=await Promise.race([res.text(),timeout]);
     try{return JSON.parse(text);}
     catch(e){throw new Error('SERVER_BAD_RESPONSE');} // Apps Script ตอบ HTML (เช่น quota เต็ม/สคริปต์ล่ม)
   }finally{clearTimeout(timer);}
@@ -873,6 +883,7 @@ function normalizeRows(arr){
 }
 async function loadDB(){
   syncBar(true);
+  _refreshing=true; // กัน refreshData ยิง getAll ซ้อนระหว่างโหลดรอบแรก
   try{
     const d=await apiCall({action:'getAll'});
     if(d.error)throw new Error(d.error);
@@ -882,6 +893,7 @@ async function loadDB(){
     saveLocalCache();
     syncBar(false);
   }catch(e){syncBar(false);console.error('loadDB',e);}
+  _refreshing=false;
 }
 async function saveRow(sheet,row){
   try{await apiCall({action:'addRow',sheet,row});}catch(e){console.error('saveRow',e);}
@@ -895,37 +907,43 @@ async function deleteSheetRow(sheet,id){
 async function savePasswordToSheet(key,value){
   try{await apiCall({action:'setPassword',key,value});}catch(e){console.error('savePwd',e);}
 }
-let _refreshTimer=null;
+let _refreshTimer=null,_lastRefresh=0;
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
-function startAutoRefresh(){
-  if(_refreshTimer)return; // กันเริ่มซ้ำ — เดิมถูกเรียก 2 ครั้ง ทำให้ยิง getAll ซ้อนกัน
-  _refreshTimer=setInterval(async()=>{
-    if(!SESSION.role||document.hidden)return; // ไม่ล็อกอิน/แท็บถูกซ่อน ไม่ต้องยิง
-    if(_refreshing)return;
-    _refreshing=true;
-    try{
-      const d=await apiCall({action:'getAll'});
-      if(!d.error){
-        // merge repayments — เก็บ loanId จาก local ถ้า Sheet ยังไม่มี
-        const localRepay={};
-        DB.repayments.forEach(r=>{if(r.loanId)localRepay[String(r.id)]=r.loanId;});
-        ['transactions','payouts','loans'].forEach(k=>DB[k]=normalizeRows(d[k]));
-        const newRepay=normalizeRows(d['repayments']).map(r=>{
-          if(!r.loanId&&localRepay[String(r.id)]) r.loanId=localRepay[String(r.id)];
-          return r;
-        });
-        DB.repayments=newRepay;
-        if(d.passwords)DB.passwords=d.passwords;
-        saveLocalCache();
-        const active=document.querySelector('.page.active');
-        if(active)renders[active.id.replace('page-','')]&&renders[active.id.replace('page-','')]();
-        updateSidebar();
-      }
-    }catch(e){}
-    _refreshing=false;
-  },30000);
+// ดึงข้อมูลล่าสุดจาก Sheet — force=true ใช้กับปุ่มรีเฟรช (ข้ามการหน่วงเวลา)
+async function refreshData(force){
+  if(!SESSION.role||_refreshing)return;
+  if(!force&&Date.now()-_lastRefresh<4000)return; // กันยิงถี่เกินไป
+  _refreshing=true;syncBar(true);
+  try{
+    const d=await apiCall({action:'getAll'});
+    if(!d.error){
+      // merge repayments — เก็บ loanId จาก local ถ้า Sheet ยังไม่มี
+      const localRepay={};
+      DB.repayments.forEach(r=>{if(r.loanId)localRepay[String(r.id)]=r.loanId;});
+      ['transactions','payouts','loans'].forEach(k=>DB[k]=normalizeRows(d[k]));
+      const newRepay=normalizeRows(d['repayments']).map(r=>{
+        if(!r.loanId&&localRepay[String(r.id)]) r.loanId=localRepay[String(r.id)];
+        return r;
+      });
+      DB.repayments=newRepay;
+      if(d.passwords)DB.passwords=d.passwords;
+      DB_LOADED=true;_lastRefresh=Date.now();
+      saveLocalCache();
+      const active=document.querySelector('.page.active');
+      if(active)renders[active.id.replace('page-','')]&&renders[active.id.replace('page-','')]();
+      updateSidebar();
+      if(force)toast('อัปเดตข้อมูลแล้ว');
+    }else if(force)toast('อัปเดตไม่สำเร็จ ลองใหม่อีกครั้ง');
+  }catch(e){if(force)toast('เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง');}
+  syncBar(false);_refreshing=false;
 }
-
+function startAutoRefresh(){
+  if(_refreshTimer)return; // กันเริ่มซ้ำ
+  _refreshTimer=setInterval(()=>{if(!document.hidden)refreshData();},20000);
+}
+// สลับกลับมาที่แอป (เช่น กดจากแจ้งเตือน LINE) → เช็คข้อมูลใหม่ทันที
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshData();});
+window.addEventListener('focus',()=>refreshData());
 
 // ===== LOADING OVERLAY (กันเห็นเลข 0 ระหว่างรอข้อมูลจาก Sheet) =====
 function showLoading(msg,retry){
@@ -1006,7 +1024,7 @@ function doLogin(){
     }catch(e){
       done();
       // ไม่ใช่รหัสผิด — เป็นปัญหาเชื่อมต่อ/เซิร์ฟเวอร์ ต้องบอกให้ชัด
-      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง ['+(e&&e.name==='AbortError'?'หมดเวลา':(e&&e.message)||'unknown')+']';
+      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง ['+(e&&e.message==='TIMEOUT'?'หมดเวลา':(e&&e.message)||'unknown')+']';
       console.error('login fetch',e);
     }
   })();
@@ -1067,6 +1085,7 @@ function go(name){
   const mbTitle=document.getElementById('mb-title');
   if(mbTitle&&p)mbTitle.textContent=p.label;
   renders[name]&&renders[name]();
+  if(['approval','loans','dashboard'].includes(name))refreshData();
 }
 
 const INTEREST_RATE=0.02;
