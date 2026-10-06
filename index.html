@@ -747,6 +747,8 @@ const TYPE_LIMIT={once:1500,'tip-all':1200,'tip-part':1000,daily:1500,fee:Infini
 let DB={transactions:[],payouts:[],loans:[],repayments:[],passwords:{admin1:'1234',admin2:'5678',member:'0000'},venues:[]};
 let SESSION={role:'',name:'',memberId:''};
 let _refreshing=false;
+let DB_LOADED=false;
+let _dbPromise=null;
 
 // ===== NAV CONFIG =====
 // pages visible to all members; admin-only ones hidden for members
@@ -863,6 +865,7 @@ async function loadDB(){
     if(d.error)throw new Error(d.error);
     ['transactions','payouts','loans','repayments'].forEach(k=>DB[k]=normalizeRows(d[k]));
     if(d.passwords)DB.passwords=d.passwords;
+    DB_LOADED=true;
     syncBar(false);
   }catch(e){syncBar(false);console.error('loadDB',e);}
 }
@@ -906,6 +909,26 @@ function startAutoRefresh(){
     }catch(e){}
     _refreshing=false;
   },30000);
+}
+
+
+// ===== LOADING OVERLAY (กันเห็นเลข 0 ระหว่างรอข้อมูลจาก Sheet) =====
+function showLoading(msg,retry){
+  const el=document.getElementById('loading-screen');
+  el.style.cssText='display:flex;position:fixed;inset:0;z-index:9000;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px';
+  el.innerHTML='<div style="font-size:18px;color:var(--text)">'+msg+'</div>'+(retry?'<button class="btn btn-primary" onclick="enterApp()">ลองใหม่</button>':'<div style="color:var(--text3);font-size:13px">ครั้งแรกอาจใช้เวลาสักครู่</div>');
+}
+function hideLoading(){document.getElementById('loading-screen').style.display='none';}
+async function enterApp(){
+  if(!DB_LOADED){
+    showLoading('กำลังโหลดข้อมูล...');
+    if(_dbPromise)await _dbPromise;           // รอตัวที่โหลดไว้ตั้งแต่หน้า login
+    if(!DB_LOADED)await loadDB();             // ถ้าพลาด ลองอีกรอบ
+  }
+  if(!DB_LOADED){showLoading('โหลดข้อมูลไม่สำเร็จ (เซิร์ฟเวอร์ช้า/ล่ม)',true);return;}
+  hideLoading();
+  go('dashboard');
+  startAutoRefresh();
 }
 
 // ===== LOGIN =====
@@ -992,8 +1015,7 @@ function startApp(){
   loadMembers(); // เรียกหลัง SESSION set แล้ว เพื่อกำหนด loan member ถูกต้อง
   initDates();
   applyRoleUI();
-  go('dashboard');
-  loadDB().then(()=>{renders[currentPage]&&renders[currentPage]();updateSidebar();}).finally(startAutoRefresh);
+  enterApp();
 }
 function applyRoleUI(){
   const admin=isAdmin();
@@ -1827,6 +1849,9 @@ document.getElementById('login-screen').style.display='flex';
     if(d&&d.members&&d.members.length>0){MEMBERS=d.members;populateSelects();}
   }catch(e){console.error('preload login data',e);}
 })();
+
+// โหลดข้อมูลหลักเตรียมไว้ 1 ครั้ง (ไม่วนซ้ำ) เพื่อให้ล็อกอินแล้วข้อมูลพร้อมทันที
+_dbPromise=loadDB();
 
 // ล้าง Service Worker เก่า
 if('serviceWorker' in navigator){
