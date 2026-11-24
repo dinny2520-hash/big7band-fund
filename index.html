@@ -281,6 +281,32 @@ tbody tr:last-child td{border-bottom:none}
 .share-btn-img{background:var(--accent);color:#000}
 .share-btn-copy{background:var(--bg3);color:var(--text);border:1px solid var(--border2)!important}
 
+/* ===== STAT CARD คลิกได้ + DETAIL MODAL ===== */
+.stat-card.clickable{cursor:pointer;position:relative;transition:transform .12s,border-color .2s;user-select:none}
+.stat-card.clickable::after{content:'›';position:absolute;top:8px;right:12px;font-size:20px;line-height:1;color:var(--text3)}
+.stat-card.clickable:hover{border-color:rgba(240,165,0,.35)}
+.stat-card.clickable:active{transform:scale(.97)}
+#detail-modal .modal-box{display:flex;flex-direction:column;max-height:88vh;max-height:88dvh;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+#detail-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
+.dt-total{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:6px;font-size:13px;color:var(--text2)}
+.dt-total b{font-family:'Kanit',sans-serif;font-size:17px}
+.dt-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.dt-item:last-child{border-bottom:none}
+.dt-main{min-width:0;flex:1}
+.dt-title{font-size:14px;font-weight:500;word-break:break-word}
+.dt-sub{font-size:12px;color:var(--text3);margin-top:2px;word-break:break-word}
+.dt-due{font-size:12px;color:var(--text2);margin-top:3px}
+.dt-amt{font-family:'Kanit',sans-serif;font-weight:500;white-space:nowrap}
+.dt-group{margin-top:12px}
+.dt-group-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid var(--border2);font-weight:600;font-size:14px}
+.dt-group-head .sum{font-family:'Kanit',sans-serif;color:var(--red)}
+@media(max-width:768px){
+  .dt-total{font-size:16px!important}.dt-total b{font-size:21px!important}
+  .dt-title{font-size:18px!important}.dt-sub{font-size:15px!important}.dt-due{font-size:15px!important}
+  .dt-amt{font-size:19px!important}.dt-group-head{font-size:18px!important}
+  .stat-card.clickable::after{font-size:24px!important}
+}
+
 /* ===== SYNC ===== */
 #sync-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--accent);z-index:9998;transform:scaleX(0);transform-origin:left;transition:transform .3s}
 #sync-bar.active{transform:scaleX(1)}
@@ -719,6 +745,18 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- DETAIL MODAL (คลิกการ์ดสถิติหน้าภาพรวม) -->
+<div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeDetail()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeDetail()">✕</button>
+    <div class="modal-title" id="detail-title">-</div>
+    <div class="modal-sub" id="detail-sub"></div>
+    <div id="detail-body"></div>
+    <button class="btn btn-ghost" id="detail-more" style="display:none;width:100%;margin-top:10px;flex-shrink:0" onclick="showMoreDetail()">ดูเพิ่มเติม</button>
+  </div>
+</div>
+
 <!-- SHARE MODAL -->
 <div class="modal-overlay" id="share-modal">
   <div class="modal-box">
@@ -849,18 +887,39 @@ function syncBar(on){
 }
 
 // ===== API =====
-async function apiCall(body,timeoutMs=25000){
-  // ตั้ง timeout ด้วย Promise.race (ไม่ใช้ AbortController เพราะบางเบราว์เซอร์/WebView ส่ง signal ผ่านไม่ได้)
+function _withTimeout(promise,ms){
   let timer;
-  const timeout=new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('TIMEOUT')),timeoutMs);});
+  const timeout=new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('TIMEOUT')),ms);});
+  promise.catch(()=>{});
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
+}
+async function _fetchText(body){
+  const res=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+  return res.text();
+}
+// ทางสำรอง: บางเบราว์เซอร์/WebView ใช้ fetch ไม่ได้ จึงส่งด้วย XMLHttpRequest แทน
+function _xhrText(body,ms){
+  return new Promise((resolve,reject)=>{
+    const x=new XMLHttpRequest();
+    x.open('POST',API,true);
+    x.timeout=ms;
+    x.onload=()=>resolve(x.responseText);
+    x.onerror=()=>reject(new Error('NETWORK'));
+    x.ontimeout=()=>reject(new Error('TIMEOUT'));
+    x.send(JSON.stringify(body));
+  });
+}
+async function apiCall(body,timeoutMs=25000){
+  let text;
   try{
-    const req=fetch(API,{method:'POST',body:JSON.stringify(body)});
-    req.catch(()=>{});
-    const res=await Promise.race([req,timeout]);
-    const text=await Promise.race([res.text(),timeout]);
-    try{return JSON.parse(text);}
-    catch(e){throw new Error('SERVER_BAD_RESPONSE');} // Apps Script ตอบ HTML (เช่น quota เต็ม/สคริปต์ล่ม)
-  }finally{clearTimeout(timer);}
+    text=await _withTimeout(_fetchText(body),timeoutMs);
+  }catch(e){
+    if(e&&e.message==='TIMEOUT')throw e;
+    console.warn('fetch failed, fallback to XHR:',e);
+    text=await _xhrText(body,timeoutMs);
+  }
+  try{return JSON.parse(text);}
+  catch(e){throw new Error('SERVER_BAD_RESPONSE');} // Apps Script ตอบ HTML (เช่น quota เต็ม/สคริปต์ล่ม)
 }
 function normalizeRows(arr){
   return (arr||[]).map(r=>{
@@ -1024,7 +1083,7 @@ function doLogin(){
     }catch(e){
       done();
       // ไม่ใช่รหัสผิด — เป็นปัญหาเชื่อมต่อ/เซิร์ฟเวอร์ ต้องบอกให้ชัด
-      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง ['+(e&&e.message==='TIMEOUT'?'หมดเวลา':(e&&e.message)||'unknown')+']';
+      errEl.textContent='เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง ['+(e&&e.message==='TIMEOUT'?'หมดเวลา':String((e&&(e.message||e.name))||'unknown').slice(0,60))+']';
       console.error('login fetch',e);
     }
   })();
@@ -1141,11 +1200,11 @@ const renders={
     document.getElementById('stat-cards').innerHTML=[
       {l:'ยอดคงเหลือ',v:'฿'+fmt(balance),c:balance>=0?'green':'red',i:'💰'},
       {l:'รายรับรวม',v:'฿'+fmt(income),c:'green',i:'📈'},
-      {l:'รายจ่ายรวม',v:'฿'+fmt(expense+payout),c:'red',i:'📉'},
-      {l:'กู้คงค้าง (รวมดอก)',v:'฿'+fmt(outstanding),c:'amber',i:'📄'},
-      {l:'จ่ายสมาชิก',v:'฿'+fmt(payout),c:'blue',i:'👥'},
+      {l:'รายจ่ายรวม',v:'฿'+fmt(expense+payout),c:'red',i:'📉',k:'expense'},
+      {l:'กู้คงค้าง (รวมดอก)',v:'฿'+fmt(outstanding),c:'amber',i:'📄',k:'outstanding'},
+      {l:'จ่ายสมาชิก',v:'฿'+fmt(payout),c:'blue',i:'👥',k:'payout'},
       {l:'รับคืนกู้',v:'฿'+fmt(repaid),c:'purple',i:'↩️'},
-    ].map(c=>`<div class="stat-card"><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
+    ].map(c=>`<div class="stat-card${c.k?' clickable':''}"${c.k?` role="button" tabindex="0" onclick="openDetail('${c.k}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetail('${c.k}')}"`:''}><div class="stat-icon">${c.i}</div><div class="stat-label">${c.l}</div><div class="stat-val ${c.c}">${c.v}</div></div>`).join('');
     const all=[
       ...DB.transactions.map(t=>({date:t.date,label:t.category||'รายการ',type:t.type,amount:t.amount})),
       ...DB.payouts.map(p=>({date:p.date,label:'จ่าย: '+mName(p.member),type:'payout',amount:p.amount})),
@@ -1194,6 +1253,7 @@ const renders={
       outCard.style.display='none';
     }
     updateSidebar();
+    if(_detail.kind&&document.getElementById('detail-modal').classList.contains('show'))renderDetail(); // อัปเดตหน้าต่างรายละเอียดที่เปิดอยู่เมื่อข้อมูลสดมาถึง
   },
   approval(){
     const pending=DB.loans.filter(l=>l.status==='pending').sort((a,b)=>b.date.localeCompare(a.date));
@@ -1712,6 +1772,117 @@ function changePwd(who){
   document.getElementById(a).value='';document.getElementById(b).value='';
   toast('เปลี่ยนรหัสผ่านสำเร็จ');
 }
+
+// ===== DETAIL (คลิกการ์ดสถิติในหน้าภาพรวม) =====
+const DETAIL_LIMIT=10;
+let _detail={kind:'',all:false};
+function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function daysBetween(a,b){ // จำนวนวันจาก a ถึง b (YYYY-MM-DD) — ติดลบถ้า b ก่อน a
+  const pa=String(a).substring(0,10).split('-').map(Number),pb=String(b).substring(0,10).split('-').map(Number);
+  if(pa.length<3||pb.length<3||pa.some(isNaN)||pb.some(isNaN))return null;
+  return Math.round((Date.UTC(pb[0],pb[1]-1,pb[2])-Date.UTC(pa[0],pa[1]-1,pa[2]))/864e5);
+}
+function sortNewest(a,b){return String(b.date||'').localeCompare(String(a.date||''))||((+b.id||0)-(+a.id||0));}
+function detailExpenseItems(){
+  return [
+    ...DB.transactions.filter(t=>t.type==='expense').map(t=>({id:t.id,date:t.date,title:t.category||'รายจ่าย',sub:t.note,badge:'รายจ่าย',badgeCls:'badge-expense',amount:+t.amount||0})),
+    ...DB.payouts.map(p=>({id:p.id,date:p.date,title:'จ่าย: '+mName(p.member),sub:p.note,badge:'จ่ายสมาชิก',badgeCls:'badge-payout',amount:+p.amount||0})),
+  ].sort(sortNewest);
+}
+function detailPayoutItems(){
+  return DB.payouts.map(p=>({id:p.id,date:p.date,title:mName(p.member),sub:p.note,amount:+p.amount||0})).sort(sortNewest);
+}
+function detailItemHtml(it,color){
+  return `<div class="dt-item"><div class="dt-main"><div class="dt-title">${escH(it.title)}${it.badge?` <span class="badge ${it.badgeCls}">${it.badge}</span>`:''}</div><div class="dt-sub">${fmtDate(it.date)}${it.sub?' · '+escH(it.sub):''}</div></div><div class="dt-amt" style="color:${color}">฿${fmt(it.amount)}</div></div>`;
+}
+function detailOutstandingGroups(){
+  const ids=[...new Set([...MEMBERS.map(m=>m.id),...DB.loans.map(l=>l.member)])];
+  const groups=[];
+  ids.forEach(id=>{
+    const loans=DB.loans.filter(l=>l.member===id&&l.status==='approved');
+    if(!loans.length)return;
+    const paid=calcRepaidByLoan(id,loans);
+    const items=[];
+    loans.forEach(l=>{
+      const tot=+(l.totalReturn||calcTotal(+l.amount));
+      const remaining=Math.round((tot-(paid[String(l.id)]||0))*100)/100;
+      if(remaining>0)items.push({l,remaining});
+    });
+    if(!items.length)return;
+    items.sort((a,b)=>String(a.l.date).localeCompare(String(b.l.date)));
+    const name=mName(id)!=='-'?mName(id):'(สมาชิกที่ถูกลบ) '+id;
+    groups.push({name,items,sum:items.reduce((s,x)=>s+x.remaining,0)});
+  });
+  return groups.sort((a,b)=>b.sum-a.sum);
+}
+function loanDueHtml(l,remaining){
+  const t=l.loanType;
+  if(t==='once'){
+    if(!l.returnDate)return '<span style="color:var(--text3)">ไม่ได้ระบุวันคืน</span>';
+    const s='📆 กำหนดคืน '+fmtDate(l.returnDate);
+    const d=daysBetween(today(),l.returnDate);
+    if(d===null)return s;
+    if(d<0)return `<span style="color:var(--red);font-weight:500">${s} · เลยกำหนด ${-d} วัน</span>`;
+    if(d===0)return `<span style="color:var(--amber);font-weight:500">${s} · ครบกำหนดวันนี้</span>`;
+    return `${s} · อีก ${d} วัน`;
+  }
+  if(t==='daily'){
+    const rate=+l.dailyRate;
+    let s='📅 หักวันละ ฿'+fmt(rate);
+    if(l.startDate)s+=' · เริ่ม '+fmtDate(l.startDate);
+    if(rate>0)s+=' · อีกประมาณ '+Math.ceil(remaining/rate)+' วัน';
+    return s;
+  }
+  if(t==='tip-all')return '💰 หักจากทิปทั้งหมด · ไม่มีกำหนดวัน';
+  if(t==='tip-part')return '✂️ หักจากทิปบางส่วน · ไม่มีกำหนดวัน';
+  if(t==='fee')return '🎤 หักจากค่าตัว · ไม่มีกำหนดวัน';
+  return '';
+}
+function renderDetail(){
+  const k=_detail.kind;if(!k)return;
+  const body=document.getElementById('detail-body'),more=document.getElementById('detail-more');
+  const title=document.getElementById('detail-title'),sub=document.getElementById('detail-sub');
+  more.style.display='none';
+  if(k==='outstanding'){
+    const groups=detailOutstandingGroups();
+    const total=groups.reduce((s,g)=>s+g.sum,0),n=groups.reduce((s,g)=>s+g.items.length,0);
+    title.textContent='กู้คงค้าง';
+    sub.textContent=groups.length?`${groups.length} คนที่ยังค้างอยู่ · รวมดอกเบี้ย 2%`:'';
+    body.innerHTML=groups.length?
+      `<div class="dt-total"><span>ยอดคงค้างรวม (${n} รายการ)</span><b style="color:var(--red)">฿${fmt(total)}</b></div>`+
+      groups.map(g=>`<div class="dt-group"><div class="dt-group-head"><span>${escH(g.name)}</span><span class="sum">฿${fmt(g.sum)}</span></div>`+
+        g.items.map(({l,remaining})=>`<div class="dt-item"><div class="dt-main">
+          <div class="dt-title"><span class="badge ${TYPE_BADGE[l.loanType]||''}">${TYPE_LABEL[l.loanType]||'-'}</span></div>
+          <div class="dt-sub">กู้เมื่อ ${fmtDate(l.date)} · เงินต้น ฿${fmt(l.amount)}${l.reason?' · '+escH(l.reason):''}</div>
+          <div class="dt-due">${loanDueHtml(l,remaining)}</div>
+        </div><div class="dt-amt" style="color:var(--red)">฿${fmt(remaining)}</div></div>`).join('')+`</div>`).join('')
+      :'<div class="empty-state"><div class="icon">✅</div><p>ไม่มียอดค้างชำระ</p></div>';
+    return;
+  }
+  const isPayout=k==='payout';
+  const items=isPayout?detailPayoutItems():detailExpenseItems();
+  const total=items.reduce((s,x)=>s+x.amount,0);
+  const shown=_detail.all?items:items.slice(0,DETAIL_LIMIT);
+  const color=isPayout?'var(--blue)':'var(--red)';
+  title.textContent=isPayout?'จ่ายสมาชิก':'รายจ่ายรวม';
+  sub.textContent=items.length?(_detail.all?`ทั้งหมด ${items.length} รายการ`:`${shown.length} รายการล่าสุด`)+(isPayout?'':' · รวมรายจ่ายและการจ่ายสมาชิก'):'';
+  body.innerHTML=items.length?
+    `<div class="dt-total"><span>รวมทั้งหมด (${items.length} รายการ)</span><b style="color:${color}">฿${fmt(total)}</b></div>`+shown.map(it=>detailItemHtml(it,color)).join('')
+    :'<div class="empty-state"><div class="icon">📭</div><p>ยังไม่มีรายการ</p></div>';
+  if(!_detail.all&&items.length>DETAIL_LIMIT){
+    more.textContent=`ดูเพิ่มเติม (อีก ${items.length-DETAIL_LIMIT} รายการ)`;
+    more.style.display='block';
+  }
+}
+function openDetail(kind){
+  _detail={kind,all:false};
+  renderDetail();
+  document.getElementById('detail-body').scrollTop=0;
+  document.getElementById('detail-modal').classList.add('show');
+}
+function showMoreDetail(){_detail.all=true;renderDetail();}
+function closeDetail(){document.getElementById('detail-modal').classList.remove('show');_detail={kind:'',all:false};}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
 
 // ===== SHARE =====
 let shareData={};
